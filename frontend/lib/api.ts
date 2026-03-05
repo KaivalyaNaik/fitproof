@@ -24,7 +24,7 @@ export async function serverFetch<T>(
     .map((c) => `${c.name}=${c.value}`)
     .join("; ");
 
-  const res = await fetch(`http://localhost:8080${path}`, {
+  const res = await fetch(`${process.env.BACKEND_URL ?? "http://localhost:8080"}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",

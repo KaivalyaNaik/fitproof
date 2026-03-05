@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: fitproof-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_PORT
+        value: "8080"
+      - key: MIGRATIONS_PATH
+        value: ./migrations
+      - key: JWT_ACCESS_TOKEN_TTL
+        value: 15m
+      - key: JWT_REFRESH_TOKEN_TTL
+        value: 168h
+      - key: DB_MAX_CONNECTIONS
+        value: "5"
+      - key: DB_MIN_CONNECTIONS
+        value: "1"
+      # Set these in the Render dashboard as secret env vars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: EMAIL_VERIFICATION_TTL
+        value: 15m
