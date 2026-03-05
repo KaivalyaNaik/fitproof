@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: #ffffff;
+  color: #09090b;
+}
+
+::selection {
+  background-color: #e0e7ff;
+  color: #3730a3;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}

@@ -1,0 +1,39 @@
+# Environment
+.env
+.env.local
+
+# Frontend
+node_modules/
+.next/
+frontend/.next/
+frontend/node_modules/
+
+# Build output
+/server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test output
+*.test
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# sqlc generated output (regenerated via sqlc generate)
+# internal/repositories/db/
