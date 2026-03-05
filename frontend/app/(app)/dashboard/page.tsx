@@ -15,13 +15,13 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {!user.email_verified && (
         <EmailVerificationBanner userEmail={user.email} />
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-12">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-8 sm:mb-12">
         <StatTile label="Challenges" value={String(stats.challenges_joined)} />
         <StatTile label="Points" value={formatPoints(stats.total_points)} />
         <StatTile label="Fines" value={formatFines(stats.total_fines)} />
@@ -63,7 +63,7 @@ export default async function DashboardPage() {
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white rounded-2xl p-5 ring-1 ring-zinc-100">
+    <div className="bg-white rounded-2xl p-4 sm:p-5 ring-1 ring-zinc-100">
       <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">
         {label}
       </p>
