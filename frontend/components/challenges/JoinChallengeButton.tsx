@@ -8,7 +8,7 @@ export function JoinChallengeButton() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button variant="secondary" onClick={() => setOpen(true)}>
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
         Join Challenge
       </Button>
       <JoinChallengeModal open={open} onClose={() => setOpen(false)} />

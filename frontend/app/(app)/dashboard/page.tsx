@@ -32,7 +32,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h2 className="text-sm font-semibold text-zinc-900 uppercase tracking-widest">
           Your Challenges
         </h2>

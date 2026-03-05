@@ -11,7 +11,7 @@ export default function AuthLayout({
             FitProof
           </span>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-zinc-950/[0.06] p-8">
+        <div className="bg-white rounded-2xl shadow-sm ring-1 ring-zinc-950/[0.06] p-6 sm:p-8">
           {children}
         </div>
       </div>
