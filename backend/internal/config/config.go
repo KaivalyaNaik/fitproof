@@ -39,6 +39,10 @@ type Config struct {
 
 	// Email verification OTP TTL
 	EmailVerificationTTL time.Duration
+
+	// Google Drive media storage
+	GoogleDriveCredentials string // raw service account JSON
+	GoogleDriveFolderID    string
 }
 
 func Load() *Config {
@@ -71,6 +75,9 @@ func Load() *Config {
 		SMTPFrom:     getEnv("SMTP_FROM", "FitProof <noreply@fitproof.app>"),
 
 		EmailVerificationTTL: getEnvDuration("EMAIL_VERIFICATION_TTL", 15*time.Minute),
+
+		GoogleDriveCredentials: getEnv("GOOGLE_DRIVE_CREDENTIALS", ""),
+		GoogleDriveFolderID:    getEnv("GOOGLE_DRIVE_FOLDER_ID", ""),
 	}
 }
 

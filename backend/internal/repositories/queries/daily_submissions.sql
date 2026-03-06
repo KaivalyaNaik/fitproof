@@ -20,7 +20,22 @@ WHERE uc.status = 'active'
 GROUP BY uc.id;
 
 -- name: ListUserSubmissions :many
-SELECT id, user_challenge_id, date, submission_type, submitted_at
+SELECT id, user_challenge_id, date, submission_type, submitted_at, media_key
 FROM daily_submissions
 WHERE user_challenge_id = sqlc.arg(user_challenge_id)::uuid
 ORDER BY date DESC;
+
+-- name: GetSubmission :one
+SELECT id, user_challenge_id, date, submission_type, submitted_at, media_key
+FROM daily_submissions
+WHERE id = $1;
+
+-- name: SetSubmissionMediaKey :exec
+UPDATE daily_submissions SET media_key = $2 WHERE id = $1;
+
+-- name: ListMediaKeysByChallenge :many
+SELECT ds.media_key
+FROM daily_submissions ds
+JOIN user_challenges uc ON uc.id = ds.user_challenge_id
+WHERE uc.challenge_id = $1
+  AND ds.media_key IS NOT NULL;

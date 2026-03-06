@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useRef, useState, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
+import imageCompression from "browser-image-compression";
 import { clientFetch, ApiResponseError } from "@/lib/client-api";
 import type { ChallengeMetric, SubmissionResult, SubmissionHistoryItem } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +24,11 @@ export function SubmitForm({ challengeId, metrics }: SubmitFormProps) {
   const [result, setResult] = useState<SubmissionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [mediaUploaded, setMediaUploaded] = useState(false);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -63,6 +69,41 @@ export function SubmitForm({ challengeId, metrics }: SubmitFormProps) {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    setMediaFile(file);
+    setMediaError(null);
+  }
+
+  async function handleMediaUpload() {
+    if (!result || !mediaFile) return;
+    setMediaError(null);
+    setMediaUploading(true);
+    try {
+      let fileToUpload: File = mediaFile;
+      if (mediaFile.type.startsWith("image/")) {
+        fileToUpload = await imageCompression(mediaFile, {
+          maxSizeMB: 2,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        });
+      }
+      const form = new FormData();
+      form.append("media", fileToUpload, mediaFile.name);
+      await clientFetch(
+        `/challenges/${challengeId}/submissions/${result.id}/media`,
+        { method: "POST", body: form }
+      );
+      setMediaUploaded(true);
+    } catch (err) {
+      setMediaError(
+        err instanceof ApiResponseError ? err.message : "Upload failed."
+      );
+    } finally {
+      setMediaUploading(false);
     }
   }
 
@@ -157,6 +198,50 @@ export function SubmitForm({ challengeId, metrics }: SubmitFormProps) {
               </div>
             );
           })}
+        </div>
+
+        {/* Optional proof upload */}
+        <div className="bg-white rounded-2xl ring-1 ring-zinc-100 p-5">
+          <p className="text-xs font-semibold text-zinc-700 mb-1">Attach proof (optional)</p>
+          <p className="text-[11px] text-zinc-400 mb-3">Photo or video · max 50 MB · images are auto-compressed</p>
+          {mediaUploaded ? (
+            <div className="flex items-center gap-2 text-emerald-600 text-xs font-medium">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2.5 7l3 3 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Proof uploaded
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-zinc-200 rounded-xl py-4 text-xs text-zinc-400 hover:border-indigo-300 hover:text-indigo-500 transition-colors"
+              >
+                {mediaFile ? mediaFile.name : "Tap to choose file"}
+              </button>
+              {mediaFile && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleMediaUpload}
+                  loading={mediaUploading}
+                >
+                  Upload proof
+                </Button>
+              )}
+              {mediaError && (
+                <p className="text-xs text-red-600">{mediaError}</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );

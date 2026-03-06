@@ -264,6 +264,7 @@ type DailySubmission struct {
 	Date            pgtype.Date
 	SubmissionType  SubmissionType
 	SubmittedAt     pgtype.Timestamptz
+	MediaKey        *string
 }
 
 type EmailVerificationToken struct {

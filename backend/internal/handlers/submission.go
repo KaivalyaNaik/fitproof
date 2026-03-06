@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -14,6 +15,8 @@ import (
 	"github.com/KaivalyaNaik/fitproof/internal/services"
 	"github.com/KaivalyaNaik/fitproof/pkg/respond"
 )
+
+const maxMediaSize = 50 << 20 // 50 MB
 
 type SubmissionHandler struct {
 	svc    *services.SubmissionService
@@ -139,4 +142,63 @@ func (h *SubmissionHandler) Submit(w http.ResponseWriter, r *http.Request) {
 		Metrics:           metrics,
 		TotalPointsEarned: result.TotalPointsEarned,
 	})
+}
+
+func (h *SubmissionHandler) UploadMedia(w http.ResponseWriter, r *http.Request) {
+	userID, ok := callerID(r)
+	if !ok {
+		respond.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	challengeID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		respond.Error(w, http.StatusBadRequest, "invalid challenge id")
+		return
+	}
+
+	subID, err := uuid.Parse(chi.URLParam(r, "subID"))
+	if err != nil {
+		respond.Error(w, http.StatusBadRequest, "invalid submission id")
+		return
+	}
+
+	if err := r.ParseMultipartForm(maxMediaSize + (1 << 20)); err != nil {
+		respond.Error(w, http.StatusBadRequest, "request too large or malformed")
+		return
+	}
+
+	file, header, err := r.FormFile("media")
+	if err != nil {
+		respond.Error(w, http.StatusBadRequest, "media file is required")
+		return
+	}
+	defer file.Close()
+
+	contentType := header.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "image/") && !strings.HasPrefix(contentType, "video/") {
+		respond.Error(w, http.StatusBadRequest, "only image or video files are allowed")
+		return
+	}
+
+	if header.Size > maxMediaSize {
+		respond.Error(w, http.StatusBadRequest, "file too large (max 50 MB)")
+		return
+	}
+
+	fileID, err := h.svc.UploadMedia(r.Context(), userID, challengeID, subID, header.Filename, contentType, file)
+	if err != nil {
+		switch {
+		case errors.Is(err, services.ErrNotMember):
+			respond.Error(w, http.StatusForbidden, "not a member of this challenge")
+		case errors.Is(err, services.ErrMediaNotConfigured):
+			respond.Error(w, http.StatusServiceUnavailable, "media storage not configured")
+		default:
+			h.logger.Error("upload media failed", slog.String("error", err.Error()))
+			respond.Error(w, http.StatusInternalServerError, "internal server error")
+		}
+		return
+	}
+
+	respond.JSON(w, http.StatusOK, map[string]string{"file_id": fileID})
 }

@@ -2,6 +2,11 @@
 .env
 .env.local
 
+# Service account keys
+*-credentials.json
+*.serviceaccount.json
+fitnesschallenge-*.json
+
 # Frontend
 node_modules/
 .next/
@@ -10,6 +15,7 @@ frontend/node_modules/
 
 # Build output
 /server
+backend/server
 *.exe
 *.exe~
 *.dll

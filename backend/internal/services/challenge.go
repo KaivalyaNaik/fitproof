@@ -38,11 +38,18 @@ type ChallengeResult struct {
 	Membership db.UserChallenge
 }
 
+// MediaDeleter allows the challenge service to clean up Drive files on close.
+type MediaDeleter interface {
+	Delete(ctx context.Context, fileID string) error
+}
+
 type ChallengeService struct {
 	pool       *pgxpool.Pool
 	queries    *db.Queries
 	metricRepo *repositories.MetricRepository
 	chalRepo   *repositories.ChallengeRepository
+	subRepo    *repositories.SubmissionRepository
+	media      MediaDeleter // nil when Drive is not configured
 }
 
 func NewChallengeService(
@@ -50,12 +57,16 @@ func NewChallengeService(
 	queries *db.Queries,
 	metricRepo *repositories.MetricRepository,
 	chalRepo *repositories.ChallengeRepository,
+	subRepo *repositories.SubmissionRepository,
+	media MediaDeleter,
 ) *ChallengeService {
 	return &ChallengeService{
 		pool:       pool,
 		queries:    queries,
 		metricRepo: metricRepo,
 		chalRepo:   chalRepo,
+		subRepo:    subRepo,
+		media:      media,
 	}
 }
 
@@ -265,7 +276,27 @@ func (s *ChallengeService) CloseChallenge(ctx context.Context, challengeID, user
 	if uc.Role != db.UserChallengeRoleHost && uc.Role != db.UserChallengeRoleCohost {
 		return db.Challenge{}, ErrNotAuthorized
 	}
-	return s.chalRepo.UpdateChallengeStatus(ctx, challengeID, status)
+
+	challenge, err := s.chalRepo.UpdateChallengeStatus(ctx, challengeID, status)
+	if err != nil {
+		return db.Challenge{}, err
+	}
+
+	// Asynchronously delete media files from Drive — don't fail the close if Drive is unavailable.
+	if s.media != nil && s.subRepo != nil {
+		go func() {
+			bgCtx := context.Background()
+			keys, err := s.subRepo.ListMediaKeysByChallenge(bgCtx, challengeID)
+			if err != nil {
+				return
+			}
+			for _, key := range keys {
+				_ = s.media.Delete(bgCtx, key)
+			}
+		}()
+	}
+
+	return challenge, nil
 }
 
 func (s *ChallengeService) LeaveChallenge(ctx context.Context, challengeID, userID uuid.UUID) error {

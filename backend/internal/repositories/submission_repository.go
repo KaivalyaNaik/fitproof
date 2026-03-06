@@ -64,3 +64,25 @@ func (r *SubmissionRepository) ListUserSubmissions(ctx context.Context, userChal
 func (r *SubmissionRepository) ListMetricValuesBySubmissions(ctx context.Context, ids []uuid.UUID) ([]db.ListMetricValuesBySubmissionsRow, error) {
 	return r.q.ListMetricValuesBySubmissions(ctx, ids)
 }
+
+func (r *SubmissionRepository) GetSubmission(ctx context.Context, id uuid.UUID) (db.DailySubmission, error) {
+	return r.q.GetSubmission(ctx, id)
+}
+
+func (r *SubmissionRepository) SetMediaKey(ctx context.Context, id uuid.UUID, fileID string) error {
+	return r.q.SetSubmissionMediaKey(ctx, id, &fileID)
+}
+
+func (r *SubmissionRepository) ListMediaKeysByChallenge(ctx context.Context, challengeID uuid.UUID) ([]string, error) {
+	keys, err := r.q.ListMediaKeysByChallenge(ctx, challengeID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]string, 0, len(keys))
+	for _, k := range keys {
+		if k != nil {
+			result = append(result, *k)
+		}
+	}
+	return result, nil
+}

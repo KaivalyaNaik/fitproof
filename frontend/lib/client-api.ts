@@ -26,6 +26,11 @@ async function refreshToken(): Promise<boolean> {
   return refreshPromise;
 }
 
+function buildHeaders(options?: RequestInit): HeadersInit {
+  if (options?.body instanceof FormData) return options?.headers ?? {};
+  return { "Content-Type": "application/json", ...(options?.headers ?? {}) };
+}
+
 export async function clientFetch<T>(
   path: string,
   options?: RequestInit
@@ -33,10 +38,7 @@ export async function clientFetch<T>(
   const res = await fetch(`/api${path}`, {
     ...options,
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options?.headers ?? {}),
-    },
+    headers: buildHeaders(options),
   });
 
   if (res.status === 401) {
@@ -48,10 +50,7 @@ export async function clientFetch<T>(
     const retry = await fetch(`/api${path}`, {
       ...options,
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...(options?.headers ?? {}),
-      },
+      headers: buildHeaders(options),
     });
     if (retry.status === 401) {
       window.location.href = "/login";

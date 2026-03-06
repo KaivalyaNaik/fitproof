@@ -104,4 +104,5 @@ export interface SubmissionHistoryItem {
   submitted_at: string;
   metrics: MetricValueDetail[];
   total_points_earned: string;
+  media_key?: string;
 }

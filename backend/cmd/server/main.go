@@ -21,6 +21,7 @@ import (
 	"github.com/KaivalyaNaik/fitproof/internal/repositories"
 	repodb "github.com/KaivalyaNaik/fitproof/internal/repositories/db"
 	"github.com/KaivalyaNaik/fitproof/internal/services"
+	"github.com/KaivalyaNaik/fitproof/pkg/drive"
 	"github.com/KaivalyaNaik/fitproof/pkg/email"
 )
 
@@ -70,14 +71,26 @@ func main() {
 	)
 	authH := handlers.NewAuthHandler(authSvc, logger, cfg.AppEnv == "production", cfg.JWTAccessTokenTTL, cfg.JWTRefreshTokenTTL, cfg.FrontendURL, googleEnabled)
 
+	// Google Drive media storage (optional — disabled if credentials not set)
+	var driveSvc *drive.Service
+	if cfg.GoogleDriveCredentials != "" && cfg.GoogleDriveFolderID != "" {
+		var driveErr error
+		driveSvc, driveErr = drive.New(ctx, []byte(cfg.GoogleDriveCredentials), cfg.GoogleDriveFolderID)
+		if driveErr != nil {
+			logger.Error("drive init failed", slog.String("error", driveErr.Error()))
+			os.Exit(1)
+		}
+		logger.Info("google drive media storage enabled")
+	}
+
 	metricRepo := repositories.NewMetricRepository(queries)
 	chalRepo := repositories.NewChallengeRepository(queries)
-	chalSvc := services.NewChallengeService(pool, queries, metricRepo, chalRepo)
+	subRepo := repositories.NewSubmissionRepository(queries)
+	chalSvc := services.NewChallengeService(pool, queries, metricRepo, chalRepo, subRepo, driveSvc)
 	chalH := handlers.NewChallengeHandler(chalSvc, metricRepo, logger)
 	userH := handlers.NewUserHandler(userRepo, logger)
 
-	subRepo := repositories.NewSubmissionRepository(queries)
-	subSvc := services.NewSubmissionService(pool, queries, chalRepo, subRepo)
+	subSvc := services.NewSubmissionService(pool, queries, chalRepo, subRepo, driveSvc)
 	subH := handlers.NewSubmissionHandler(subSvc, logger)
 
 	r := chi.NewRouter()
@@ -123,6 +136,7 @@ func main() {
 			r.Post("/{id}/metrics", chalH.AddMetrics)
 			r.Post("/{id}/submissions", subH.Submit)
 			r.Get("/{id}/submissions", subH.ListSubmissions)
+			r.Post("/{id}/submissions/{subID}/media", subH.UploadMedia)
 			r.Get("/{id}/leaderboard", chalH.GetLeaderboard)
 			r.Patch("/{id}/status", chalH.UpdateStatus)
 			r.Post("/{id}/leave", chalH.Leave)

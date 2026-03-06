@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +15,12 @@ import (
 	"github.com/KaivalyaNaik/fitproof/internal/repositories"
 	db "github.com/KaivalyaNaik/fitproof/internal/repositories/db"
 )
+
+// MediaUploader abstracts Google Drive (or any future media store).
+type MediaUploader interface {
+	Upload(ctx context.Context, name, contentType string, r io.Reader) (string, error)
+	Delete(ctx context.Context, fileID string) error
+}
 
 var (
 	ErrNotMember     = errors.New("not a member of this challenge")
@@ -35,6 +42,7 @@ type SubmissionHistoryItem struct {
 	SubmittedAt       string              `json:"submitted_at"`
 	Metrics           []MetricValueDetail `json:"metrics"`
 	TotalPointsEarned string              `json:"total_points_earned"`
+	MediaKey          *string             `json:"media_key,omitempty"`
 }
 
 type MetricValue struct {
@@ -60,6 +68,7 @@ type SubmissionService struct {
 	queries  *db.Queries
 	chalRepo *repositories.ChallengeRepository
 	subRepo  *repositories.SubmissionRepository
+	media    MediaUploader // nil when Drive is not configured
 }
 
 func NewSubmissionService(
@@ -67,12 +76,14 @@ func NewSubmissionService(
 	queries *db.Queries,
 	chalRepo *repositories.ChallengeRepository,
 	subRepo *repositories.SubmissionRepository,
+	media MediaUploader,
 ) *SubmissionService {
 	return &SubmissionService{
 		pool:     pool,
 		queries:  queries,
 		chalRepo: chalRepo,
 		subRepo:  subRepo,
+		media:    media,
 	}
 }
 
@@ -246,9 +257,50 @@ func (s *SubmissionService) ListUserSubmissions(ctx context.Context, userID, cha
 			SubmittedAt:       sub.SubmittedAt.Time.Format(time.RFC3339),
 			Metrics:           metrics,
 			TotalPointsEarned: fmt.Sprintf("%.2f", ptMap[sub.ID]),
+			MediaKey:          sub.MediaKey,
 		}
 	}
 	return result, nil
+}
+
+var ErrMediaNotConfigured = errors.New("media storage not configured")
+
+func (s *SubmissionService) UploadMedia(ctx context.Context, userID, challengeID, subID uuid.UUID, filename, contentType string, file io.Reader) (string, error) {
+	if s.media == nil {
+		return "", ErrMediaNotConfigured
+	}
+
+	uc, err := s.chalRepo.GetUserChallenge(ctx, userID, challengeID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", ErrNotMember
+		}
+		return "", err
+	}
+
+	sub, err := s.subRepo.GetSubmission(ctx, subID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", fmt.Errorf("submission not found")
+		}
+		return "", err
+	}
+	if sub.UserChallengeID != uc.ID {
+		return "", ErrNotMember
+	}
+
+	name := fmt.Sprintf("%s_%s_%s", challengeID, subID, filename)
+	fileID, err := s.media.Upload(ctx, name, contentType, file)
+	if err != nil {
+		return "", fmt.Errorf("upload media: %w", err)
+	}
+
+	if err := s.subRepo.SetMediaKey(ctx, subID, fileID); err != nil {
+		_ = s.media.Delete(ctx, fileID)
+		return "", fmt.Errorf("store media key: %w", err)
+	}
+
+	return fileID, nil
 }
 
 func (s *SubmissionService) ProcessMissedSubmissions(ctx context.Context, dateStr string) error {
