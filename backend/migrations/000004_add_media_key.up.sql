@@ -1,1 +1,1 @@
-ALTER TABLE daily_submissions ADD COLUMN media_key TEXT;
+ALTER TABLE daily_submissions ADD COLUMN IF NOT EXISTS media_key TEXT;
