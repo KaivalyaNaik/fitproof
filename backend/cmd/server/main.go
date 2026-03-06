@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"os"
@@ -74,8 +75,16 @@ func main() {
 	// Google Drive media storage (optional — disabled if credentials not set)
 	var driveSvc *drive.Service
 	if cfg.GoogleDriveCredentials != "" && cfg.GoogleDriveFolderID != "" {
+		credsJSON := cfg.GoogleDriveCredentials
+		// Render may wrap the JSON value in extra quotes — unescape if so.
+		if len(credsJSON) > 0 && credsJSON[0] == '"' {
+			var unquoted string
+			if err := json.Unmarshal([]byte(credsJSON), &unquoted); err == nil {
+				credsJSON = unquoted
+			}
+		}
 		var driveErr error
-		driveSvc, driveErr = drive.New(ctx, []byte(cfg.GoogleDriveCredentials), cfg.GoogleDriveFolderID)
+		driveSvc, driveErr = drive.New(ctx, []byte(credsJSON), cfg.GoogleDriveFolderID)
 		if driveErr != nil {
 			logger.Error("drive init failed", slog.String("error", driveErr.Error()))
 			os.Exit(1)
