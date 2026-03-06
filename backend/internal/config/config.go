@@ -40,9 +40,12 @@ type Config struct {
 	// Email verification OTP TTL
 	EmailVerificationTTL time.Duration
 
-	// Google Drive media storage
-	GoogleDriveCredentials string // raw service account JSON
-	GoogleDriveFolderID    string
+	// Cloudflare R2 media storage
+	R2AccountID       string
+	R2AccessKeyID     string
+	R2SecretAccessKey string
+	R2Bucket          string
+	R2PublicURL       string // e.g. https://pub-xxx.r2.dev (no trailing slash)
 }
 
 func Load() *Config {
@@ -76,8 +79,11 @@ func Load() *Config {
 
 		EmailVerificationTTL: getEnvDuration("EMAIL_VERIFICATION_TTL", 15*time.Minute),
 
-		GoogleDriveCredentials: getEnv("GOOGLE_DRIVE_CREDENTIALS", ""),
-		GoogleDriveFolderID:    getEnv("GOOGLE_DRIVE_FOLDER_ID", ""),
+		R2AccountID:       getEnv("R2_ACCOUNT_ID", ""),
+		R2AccessKeyID:     getEnv("R2_ACCESS_KEY_ID", ""),
+		R2SecretAccessKey: getEnv("R2_SECRET_ACCESS_KEY", ""),
+		R2Bucket:          getEnv("R2_BUCKET", ""),
+		R2PublicURL:       getEnv("R2_PUBLIC_URL", ""),
 	}
 }
 

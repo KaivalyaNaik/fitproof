@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 	"net/http"
 	"os"
@@ -22,8 +21,8 @@ import (
 	"github.com/KaivalyaNaik/fitproof/internal/repositories"
 	repodb "github.com/KaivalyaNaik/fitproof/internal/repositories/db"
 	"github.com/KaivalyaNaik/fitproof/internal/services"
-	"github.com/KaivalyaNaik/fitproof/pkg/drive"
 	"github.com/KaivalyaNaik/fitproof/pkg/email"
+	"github.com/KaivalyaNaik/fitproof/pkg/storage"
 )
 
 func main() {
@@ -72,34 +71,26 @@ func main() {
 	)
 	authH := handlers.NewAuthHandler(authSvc, logger, cfg.AppEnv == "production", cfg.JWTAccessTokenTTL, cfg.JWTRefreshTokenTTL, cfg.FrontendURL, googleEnabled)
 
-	// Google Drive media storage (optional — disabled if credentials not set)
-	var driveSvc *drive.Service
-	if cfg.GoogleDriveCredentials != "" && cfg.GoogleDriveFolderID != "" {
-		credsJSON := cfg.GoogleDriveCredentials
-		// Render may wrap the JSON value in extra quotes — unescape if so.
-		if len(credsJSON) > 0 && credsJSON[0] == '"' {
-			var unquoted string
-			if err := json.Unmarshal([]byte(credsJSON), &unquoted); err == nil {
-				credsJSON = unquoted
-			}
-		}
-		var driveErr error
-		driveSvc, driveErr = drive.New(ctx, []byte(credsJSON), cfg.GoogleDriveFolderID)
-		if driveErr != nil {
-			logger.Error("drive init failed", slog.String("error", driveErr.Error()))
+	// Cloudflare R2 media storage (optional — disabled if credentials not set)
+	var r2Svc *storage.R2Service
+	if cfg.R2AccountID != "" && cfg.R2AccessKeyID != "" && cfg.R2SecretAccessKey != "" && cfg.R2Bucket != "" {
+		var r2Err error
+		r2Svc, r2Err = storage.NewR2(cfg.R2AccountID, cfg.R2AccessKeyID, cfg.R2SecretAccessKey, cfg.R2Bucket, cfg.R2PublicURL)
+		if r2Err != nil {
+			logger.Error("r2 init failed", slog.String("error", r2Err.Error()))
 			os.Exit(1)
 		}
-		logger.Info("google drive media storage enabled")
+		logger.Info("cloudflare r2 media storage enabled")
 	}
 
 	metricRepo := repositories.NewMetricRepository(queries)
 	chalRepo := repositories.NewChallengeRepository(queries)
 	subRepo := repositories.NewSubmissionRepository(queries)
-	chalSvc := services.NewChallengeService(pool, queries, metricRepo, chalRepo, subRepo, driveSvc)
+	chalSvc := services.NewChallengeService(pool, queries, metricRepo, chalRepo, subRepo, r2Svc)
 	chalH := handlers.NewChallengeHandler(chalSvc, metricRepo, logger)
 	userH := handlers.NewUserHandler(userRepo, logger)
 
-	subSvc := services.NewSubmissionService(pool, queries, chalRepo, subRepo, driveSvc)
+	subSvc := services.NewSubmissionService(pool, queries, chalRepo, subRepo, r2Svc)
 	subH := handlers.NewSubmissionHandler(subSvc, logger)
 
 	r := chi.NewRouter()
