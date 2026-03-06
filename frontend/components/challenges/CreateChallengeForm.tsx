@@ -229,16 +229,20 @@ export function CreateChallengeForm() {
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={mediaRequired}
                 onClick={() => setMediaRequired((v) => !v)}
-                className={[
-                  "relative w-10 h-6 rounded-full transition-colors shrink-0",
-                  mediaRequired ? "bg-zinc-900" : "bg-zinc-200",
-                ].join(" ")}
+                className="shrink-0 focus:outline-none"
               >
-                <span className={[
-                  "absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform",
-                  mediaRequired ? "translate-x-5" : "translate-x-1",
-                ].join(" ")} />
+                <div className={[
+                  "relative w-11 h-6 rounded-full transition-colors duration-200",
+                  mediaRequired ? "bg-indigo-600" : "bg-zinc-200",
+                ].join(" ")}>
+                  <div className={[
+                    "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm border border-zinc-200 transition-transform duration-200",
+                    mediaRequired ? "translate-x-5" : "translate-x-0",
+                  ].join(" ")} />
+                </div>
               </button>
             </div>
             {mediaRequired && (
