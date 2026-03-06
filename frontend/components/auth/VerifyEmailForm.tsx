@@ -13,7 +13,7 @@ export function VerifyEmailForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState<boolean | "failed">(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Send code on mount (already sent at register, but handles direct navigation too)
@@ -23,9 +23,14 @@ export function VerifyEmailForm() {
         setSent(true);
         startCooldown();
       })
-      .catch(() => {
-        // 409 = already verified → go to dashboard
-        router.push("/dashboard");
+      .catch((err) => {
+        if (err instanceof ApiResponseError && err.status === 409) {
+          // Already verified — go to dashboard
+          router.push("/dashboard");
+        } else {
+          // Failed to send (SMTP not configured, etc.) — stay on page, let user retry
+          setSent("failed");
+        }
       });
     inputRef.current?.focus();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,8 +90,10 @@ export function VerifyEmailForm() {
       <div className="mb-7">
         <h1 className="text-xl font-semibold text-zinc-900 mb-1">Verify your email</h1>
         <p className="text-sm text-zinc-400">
-          {sent
+          {sent === true
             ? "We sent a 6-digit code to your email address."
+            : sent === "failed"
+            ? "Couldn't send a code. Use the button below to try again."
             : "Sending code…"}
         </p>
       </div>
