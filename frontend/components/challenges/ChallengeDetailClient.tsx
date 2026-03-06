@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { LeaderboardTable } from "./LeaderboardTable";
 import { SubmissionHistory } from "./SubmissionHistory";
+import { ChallengeFeed } from "./ChallengeFeed";
 import { SubmitForm } from "./SubmitForm";
 import { AddMetricsModal } from "./AddMetricsModal";
 import { formatDate, statusLabel } from "@/lib/utils";
 
-type Tab = "leaderboard" | "history" | "submit";
+type Tab = "leaderboard" | "feed" | "history" | "submit";
 
 interface Props {
   challenge: ChallengeDetail;
@@ -78,6 +79,7 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "leaderboard", label: "Leaderboard" },
+    { id: "feed", label: "Team Feed" },
     { id: "history", label: "My History" },
     { id: "submit", label: "Submit Today" },
   ];
@@ -188,6 +190,9 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
           <div className="bg-white rounded-2xl ring-1 ring-zinc-100 overflow-hidden">
             <LeaderboardTable entries={leaderboard} />
           </div>
+        )}
+        {activeTab === "feed" && (
+          <ChallengeFeed challengeId={challenge.id} />
         )}
         {activeTab === "history" && (
           <SubmissionHistory challengeId={challenge.id} />

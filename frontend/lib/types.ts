@@ -99,6 +99,14 @@ export interface MetricValueDetail {
   points_awarded: string;
 }
 
+export interface FeedItem {
+  submission_id: string;
+  user_id: string;
+  display_name: string;
+  date: string;
+  media: string[];
+}
+
 export interface SubmissionHistoryItem {
   id: string;
   date: string;

@@ -133,6 +133,42 @@ func (q *Queries) DeleteExpiredSubmissionMedia(ctx context.Context, cutoff time.
 	return err
 }
 
+type ChallengeFeedRow struct {
+	SubmissionID uuid.UUID
+	UserID       uuid.UUID
+	DisplayName  string
+	Date         pgtype.Date
+	MediaKey     string
+}
+
+const listChallengeFeed = `
+SELECT ds.id, u.id, u.display_name, ds.date, sm.media_key
+FROM submission_media sm
+JOIN daily_submissions ds ON ds.id = sm.submission_id
+JOIN user_challenges uc   ON uc.id = ds.user_challenge_id
+JOIN users u              ON u.id  = uc.user_id
+WHERE uc.challenge_id = $1
+  AND sm.created_at >= NOW() - INTERVAL '7 days'
+ORDER BY ds.date DESC, u.display_name, sm.created_at
+`
+
+func (q *Queries) ListChallengeFeed(ctx context.Context, challengeID uuid.UUID) ([]ChallengeFeedRow, error) {
+	rows, err := q.db.Query(ctx, listChallengeFeed, challengeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ChallengeFeedRow
+	for rows.Next() {
+		var i ChallengeFeedRow
+		if err := rows.Scan(&i.SubmissionID, &i.UserID, &i.DisplayName, &i.Date, &i.MediaKey); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	return items, rows.Err()
+}
+
 func (q *Queries) ListSubmittedWithoutMedia(ctx context.Context, date pgtype.Date) ([]ListSubmittedWithoutMediaRow, error) {
 	rows, err := q.db.Query(ctx, listSubmittedWithoutMedia, date)
 	if err != nil {

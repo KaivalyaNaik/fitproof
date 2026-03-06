@@ -144,6 +144,31 @@ func (h *SubmissionHandler) Submit(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *SubmissionHandler) GetChallengeFeed(w http.ResponseWriter, r *http.Request) {
+	userID, ok := callerID(r)
+	if !ok {
+		respond.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	challengeID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		respond.Error(w, http.StatusBadRequest, "invalid challenge id")
+		return
+	}
+	items, err := h.svc.GetChallengeFeed(r.Context(), userID, challengeID)
+	if err != nil {
+		switch {
+		case errors.Is(err, services.ErrNotMember):
+			respond.Error(w, http.StatusForbidden, "not a member of this challenge")
+		default:
+			h.logger.Error("get challenge feed failed", slog.String("error", err.Error()))
+			respond.Error(w, http.StatusInternalServerError, "internal server error")
+		}
+		return
+	}
+	respond.JSON(w, http.StatusOK, items)
+}
+
 func (h *SubmissionHandler) UploadMedia(w http.ResponseWriter, r *http.Request) {
 	userID, ok := callerID(r)
 	if !ok {

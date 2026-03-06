@@ -97,3 +97,7 @@ func (r *SubmissionRepository) ListExpiredSubmissionMedia(ctx context.Context, c
 func (r *SubmissionRepository) DeleteExpiredSubmissionMedia(ctx context.Context, cutoff time.Time) error {
 	return r.q.DeleteExpiredSubmissionMedia(ctx, cutoff)
 }
+
+func (r *SubmissionRepository) ListChallengeFeed(ctx context.Context, challengeID uuid.UUID) ([]db.ChallengeFeedRow, error) {
+	return r.q.ListChallengeFeed(ctx, challengeID)
+}

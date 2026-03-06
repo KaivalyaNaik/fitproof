@@ -368,6 +368,62 @@ func (s *SubmissionService) ProcessMissingMedia(ctx context.Context, dateStr str
 	return nil
 }
 
+type FeedItem struct {
+	SubmissionID string   `json:"submission_id"`
+	UserID       string   `json:"user_id"`
+	DisplayName  string   `json:"display_name"`
+	Date         string   `json:"date"`
+	Media        []string `json:"media"`
+}
+
+func (s *SubmissionService) GetChallengeFeed(ctx context.Context, userID, challengeID uuid.UUID) ([]FeedItem, error) {
+	if _, err := s.chalRepo.GetUserChallenge(ctx, userID, challengeID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotMember
+		}
+		return nil, err
+	}
+
+	rows, err := s.subRepo.ListChallengeFeed(ctx, challengeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Group media by submission, preserving order
+	type key struct {
+		subID       uuid.UUID
+		userID      uuid.UUID
+		displayName string
+		date        string
+	}
+	seen := make(map[uuid.UUID]int) // subID → index in result
+	var result []FeedItem
+	for _, row := range rows {
+		url := row.MediaKey
+		if s.media != nil {
+			if u := s.media.PublicURL(row.MediaKey); u != "" {
+				url = u
+			}
+		}
+		if idx, ok := seen[row.SubmissionID]; ok {
+			result[idx].Media = append(result[idx].Media, url)
+		} else {
+			seen[row.SubmissionID] = len(result)
+			result = append(result, FeedItem{
+				SubmissionID: row.SubmissionID.String(),
+				UserID:       row.UserID.String(),
+				DisplayName:  row.DisplayName,
+				Date:         row.Date.Time.Format("2006-01-02"),
+				Media:        []string{url},
+			})
+		}
+	}
+	if result == nil {
+		return []FeedItem{}, nil
+	}
+	return result, nil
+}
+
 func (s *SubmissionService) DeleteExpiredMedia(ctx context.Context) error {
 	cutoff := time.Now().UTC().AddDate(0, 0, -7)
 	rows, err := s.subRepo.ListExpiredSubmissionMedia(ctx, cutoff)
