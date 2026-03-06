@@ -164,7 +164,7 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white/70 hover:text-white text-2xl leading-none p-2"
+            className="absolute top-4 right-4 z-10 text-white/70 hover:text-white text-2xl leading-none p-2"
             aria-label="Close"
           >
             ✕
@@ -174,7 +174,7 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
           {lightbox.index > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(-1); }}
-              className="absolute left-4 text-white/70 hover:text-white text-3xl p-3"
+              className="absolute left-4 z-10 text-white/70 hover:text-white text-3xl p-3"
               aria-label="Previous"
             >
               ‹
@@ -208,7 +208,7 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
           {lightbox.index < lightbox.media.length - 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(1); }}
-              className="absolute right-4 text-white/70 hover:text-white text-3xl p-3"
+              className="absolute right-4 z-10 text-white/70 hover:text-white text-3xl p-3"
               aria-label="Next"
             >
               ›
