@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -96,6 +97,41 @@ WHERE ds.date           = $1
     SELECT 1 FROM submission_media sm WHERE sm.submission_id = ds.id
   )
 `
+
+type ExpiredSubmissionMediaRow struct {
+	ID       uuid.UUID
+	MediaKey string
+}
+
+const listExpiredSubmissionMedia = `
+SELECT id, media_key FROM submission_media WHERE created_at < $1
+`
+
+func (q *Queries) ListExpiredSubmissionMedia(ctx context.Context, cutoff time.Time) ([]ExpiredSubmissionMediaRow, error) {
+	rows, err := q.db.Query(ctx, listExpiredSubmissionMedia, cutoff)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ExpiredSubmissionMediaRow
+	for rows.Next() {
+		var i ExpiredSubmissionMediaRow
+		if err := rows.Scan(&i.ID, &i.MediaKey); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	return items, rows.Err()
+}
+
+const deleteExpiredSubmissionMedia = `
+DELETE FROM submission_media WHERE created_at < $1
+`
+
+func (q *Queries) DeleteExpiredSubmissionMedia(ctx context.Context, cutoff time.Time) error {
+	_, err := q.db.Exec(ctx, deleteExpiredSubmissionMedia, cutoff)
+	return err
+}
 
 func (q *Queries) ListSubmittedWithoutMedia(ctx context.Context, date pgtype.Date) ([]ListSubmittedWithoutMediaRow, error) {
 	rows, err := q.db.Query(ctx, listSubmittedWithoutMedia, date)

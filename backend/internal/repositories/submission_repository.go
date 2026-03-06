@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
@@ -87,4 +88,12 @@ func (r *SubmissionRepository) ListMediaKeysByChallenge(ctx context.Context, cha
 
 func (r *SubmissionRepository) ListSubmittedWithoutMedia(ctx context.Context, date pgtype.Date) ([]db.ListSubmittedWithoutMediaRow, error) {
 	return r.q.ListSubmittedWithoutMedia(ctx, date)
+}
+
+func (r *SubmissionRepository) ListExpiredSubmissionMedia(ctx context.Context, cutoff time.Time) ([]db.ExpiredSubmissionMediaRow, error) {
+	return r.q.ListExpiredSubmissionMedia(ctx, cutoff)
+}
+
+func (r *SubmissionRepository) DeleteExpiredSubmissionMedia(ctx context.Context, cutoff time.Time) error {
+	return r.q.DeleteExpiredSubmissionMedia(ctx, cutoff)
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,10 +17,11 @@ import (
 	db "github.com/KaivalyaNaik/fitproof/internal/repositories/db"
 )
 
-// MediaUploader abstracts Google Drive (or any future media store).
+// MediaUploader abstracts the media store (Cloudflare R2).
 type MediaUploader interface {
 	Upload(ctx context.Context, name, contentType string, r io.Reader) (string, error)
 	Delete(ctx context.Context, fileID string) error
+	PublicURL(key string) string
 }
 
 var (
@@ -251,7 +253,13 @@ func (s *SubmissionService) ListUserSubmissions(ctx context.Context, userID, cha
 
 	mediaMap := make(map[uuid.UUID][]string, len(subs))
 	for _, m := range mediaRows {
-		mediaMap[m.SubmissionID] = append(mediaMap[m.SubmissionID], m.MediaKey)
+		url := m.MediaKey
+		if s.media != nil {
+			if u := s.media.PublicURL(m.MediaKey); u != "" {
+				url = u
+			}
+		}
+		mediaMap[m.SubmissionID] = append(mediaMap[m.SubmissionID], url)
 	}
 
 	result := make([]SubmissionHistoryItem, len(subs))
@@ -356,6 +364,25 @@ func (s *SubmissionService) ProcessMissingMedia(ctx context.Context, dateStr str
 		if err = tx.Commit(ctx); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (s *SubmissionService) DeleteExpiredMedia(ctx context.Context) error {
+	cutoff := time.Now().UTC().AddDate(0, 0, -7)
+	rows, err := s.subRepo.ListExpiredSubmissionMedia(ctx, cutoff)
+	if err != nil {
+		return fmt.Errorf("list expired media: %w", err)
+	}
+	for _, row := range rows {
+		if s.media != nil {
+			if err := s.media.Delete(ctx, row.MediaKey); err != nil {
+				slog.Error("failed to delete expired media from R2", slog.String("key", row.MediaKey), slog.String("error", err.Error()))
+			}
+		}
+	}
+	if err := s.subRepo.DeleteExpiredSubmissionMedia(ctx, cutoff); err != nil {
+		return fmt.Errorf("delete expired media records: %w", err)
 	}
 	return nil
 }

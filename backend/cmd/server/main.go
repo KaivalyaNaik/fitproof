@@ -204,5 +204,9 @@ func runDailyCron(ctx context.Context, svc *services.SubmissionService, logger *
 		if err := svc.ProcessMissingMedia(ctx, date); err != nil {
 			logger.Error("cron: missing media fines failed", slog.String("error", err.Error()))
 		}
+		logger.Info("cron: cleaning up expired media")
+		if err := svc.DeleteExpiredMedia(ctx); err != nil {
+			logger.Error("cron: expired media cleanup failed", slog.String("error", err.Error()))
+		}
 	}
 }
