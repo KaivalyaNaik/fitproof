@@ -86,68 +86,67 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
-              <h1 className="text-xl font-semibold text-zinc-900 truncate">
-                {challenge.name}
-              </h1>
-              <Badge
-                variant={challenge.status as "active" | "completed" | "cancelled" | "draft"}
-                label={statusLabel(challenge.status)}
-              />
-            </div>
-            {challenge.description && (
-              <p className="text-sm text-zinc-400 leading-relaxed">{challenge.description}</p>
-            )}
-            <p className="text-[11px] text-zinc-400 mt-1.5 tabular-nums">
-              {formatDate(challenge.start_date)} – {formatDate(challenge.end_date)}
-            </p>
-          </div>
+        {/* Title row */}
+        <div className="flex items-start gap-2.5 mb-1.5 flex-wrap">
+          <h1 className="text-xl font-semibold text-zinc-900 break-words min-w-0">
+            {challenge.name}
+          </h1>
+          <Badge
+            variant={challenge.status as "active" | "completed" | "cancelled" | "draft"}
+            label={statusLabel(challenge.status)}
+          />
+        </div>
 
-          <div className="flex gap-2 shrink-0 flex-wrap justify-end">
-            {isHost && (
+        {challenge.description && (
+          <p className="text-sm text-zinc-400 leading-relaxed mb-1">{challenge.description}</p>
+        )}
+        <p className="text-[11px] text-zinc-400 tabular-nums">
+          {formatDate(challenge.start_date)} – {formatDate(challenge.end_date)}
+        </p>
+
+        {/* Action buttons — full width row on mobile, right-aligned on desktop */}
+        <div className="flex flex-wrap gap-2 mt-4">
+          {isHost && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleCopyInvite}
+              title="Copy invite code"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
+                <rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.25"/>
+                <path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/>
+              </svg>
+              {copyLabel ?? `Invite · ${challenge.invite_code}`}
+            </Button>
+          )}
+          {isHost && isActive && (
+            <>
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={handleCopyInvite}
-                title="Copy invite code"
+                onClick={() => setAddMetricsOpen(true)}
               >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
-                  <rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.25"/>
-                  <path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/>
-                </svg>
-                {copyLabel ?? `Invite · ${challenge.invite_code}`}
+                Add Metrics
               </Button>
-            )}
-            {isHost && isActive && (
-              <>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setAddMetricsOpen(true)}
-                >
-                  Add Metrics
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setCloseModalOpen(true)}
-                >
-                  Close
-                </Button>
-              </>
-            )}
-            {!isHost && (
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
-                onClick={() => setLeaveModalOpen(true)}
+                onClick={() => setCloseModalOpen(true)}
               >
-                Leave
+                Close
               </Button>
-            )}
-          </div>
+            </>
+          )}
+          {!isHost && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLeaveModalOpen(true)}
+            >
+              Leave
+            </Button>
+          )}
         </div>
 
         {/* Metrics chips */}
@@ -166,7 +165,7 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
       </div>
 
       {/* Pill tabs */}
-      <div className="flex gap-1 p-1 bg-zinc-100 rounded-xl w-fit mb-8">
+      <div className="flex gap-1 p-1 bg-zinc-100 rounded-xl w-fit mb-8 overflow-x-auto max-w-full">
         {tabs.map((tab) => (
           <button
             key={tab.id}
