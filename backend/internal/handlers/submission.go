@@ -186,13 +186,15 @@ func (h *SubmissionHandler) UploadMedia(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	fileID, err := h.svc.UploadMedia(r.Context(), userID, challengeID, subID, header.Filename, contentType, file)
+	fileKey, err := h.svc.UploadMedia(r.Context(), userID, challengeID, subID, header.Filename, contentType, file)
 	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrNotMember):
 			respond.Error(w, http.StatusForbidden, "not a member of this challenge")
 		case errors.Is(err, services.ErrMediaNotConfigured):
 			respond.Error(w, http.StatusServiceUnavailable, "media storage not configured")
+		case errors.Is(err, services.ErrMediaLimitReached):
+			respond.Error(w, http.StatusUnprocessableEntity, "maximum 4 media files per submission")
 		default:
 			h.logger.Error("upload media failed", slog.String("error", err.Error()))
 			respond.Error(w, http.StatusInternalServerError, "internal server error")
@@ -200,5 +202,5 @@ func (h *SubmissionHandler) UploadMedia(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	respond.JSON(w, http.StatusOK, map[string]string{"file_id": fileID})
+	respond.JSON(w, http.StatusOK, map[string]string{"media_key": fileKey})
 }

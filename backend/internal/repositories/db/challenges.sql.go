@@ -13,19 +13,40 @@ import (
 )
 
 const createChallenge = `-- name: CreateChallenge :one
-INSERT INTO challenges (name, description, invite_code, status, start_date, end_date, created_by)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at
+INSERT INTO challenges (name, description, invite_code, status, start_date, end_date, created_by, media_required, media_fine_amount)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at, media_required, media_fine_amount
 `
 
 type CreateChallengeParams struct {
-	Name        string
-	Description *string
-	InviteCode  string
-	Status      ChallengeStatus
-	StartDate   pgtype.Date
-	EndDate     pgtype.Date
-	CreatedBy   uuid.UUID
+	Name            string
+	Description     *string
+	InviteCode      string
+	Status          ChallengeStatus
+	StartDate       pgtype.Date
+	EndDate         pgtype.Date
+	CreatedBy       uuid.UUID
+	MediaRequired   bool
+	MediaFineAmount pgtype.Numeric
+}
+
+func scanChallenge(row interface{ Scan(...any) error }) (Challenge, error) {
+	var i Challenge
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.InviteCode,
+		&i.Status,
+		&i.StartDate,
+		&i.EndDate,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.MediaRequired,
+		&i.MediaFineAmount,
+	)
+	return i, err
 }
 
 func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams) (Challenge, error) {
@@ -37,65 +58,30 @@ func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams
 		arg.StartDate,
 		arg.EndDate,
 		arg.CreatedBy,
+		arg.MediaRequired,
+		arg.MediaFineAmount,
 	)
-	var i Challenge
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.InviteCode,
-		&i.Status,
-		&i.StartDate,
-		&i.EndDate,
-		&i.CreatedBy,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	return scanChallenge(row)
 }
 
 const getChallengeByID = `-- name: GetChallengeByID :one
-SELECT id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at FROM challenges WHERE id = $1
+SELECT id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at, media_required, media_fine_amount
+FROM challenges WHERE id = $1
 `
 
 func (q *Queries) GetChallengeByID(ctx context.Context, id uuid.UUID) (Challenge, error) {
 	row := q.db.QueryRow(ctx, getChallengeByID, id)
-	var i Challenge
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.InviteCode,
-		&i.Status,
-		&i.StartDate,
-		&i.EndDate,
-		&i.CreatedBy,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	return scanChallenge(row)
 }
 
 const getChallengeByInviteCode = `-- name: GetChallengeByInviteCode :one
-SELECT id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at FROM challenges WHERE invite_code = $1
+SELECT id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at, media_required, media_fine_amount
+FROM challenges WHERE invite_code = $1
 `
 
 func (q *Queries) GetChallengeByInviteCode(ctx context.Context, inviteCode string) (Challenge, error) {
 	row := q.db.QueryRow(ctx, getChallengeByInviteCode, inviteCode)
-	var i Challenge
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.InviteCode,
-		&i.Status,
-		&i.StartDate,
-		&i.EndDate,
-		&i.CreatedBy,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	return scanChallenge(row)
 }
 
 const getChallengeLeaderboard = `-- name: GetChallengeLeaderboard :many
@@ -154,6 +140,7 @@ const listUserChallenges = `-- name: ListUserChallenges :many
 SELECT
     c.id, c.name, c.description, c.invite_code, c.status,
     c.start_date, c.end_date, c.created_by, c.created_at, c.updated_at,
+    c.media_required, c.media_fine_amount,
     uc.id        AS uc_id,
     uc.role      AS uc_role,
     uc.status    AS uc_status,
@@ -165,20 +152,22 @@ ORDER BY c.created_at DESC
 `
 
 type ListUserChallengesRow struct {
-	ID          uuid.UUID
-	Name        string
-	Description *string
-	InviteCode  string
-	Status      ChallengeStatus
-	StartDate   pgtype.Date
-	EndDate     pgtype.Date
-	CreatedBy   uuid.UUID
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
-	UcID        uuid.UUID
-	UcRole      UserChallengeRole
-	UcStatus    UserChallengeStatus
-	UcJoinedAt  pgtype.Timestamptz
+	ID              uuid.UUID
+	Name            string
+	Description     *string
+	InviteCode      string
+	Status          ChallengeStatus
+	StartDate       pgtype.Date
+	EndDate         pgtype.Date
+	CreatedBy       uuid.UUID
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	MediaRequired   bool
+	MediaFineAmount pgtype.Numeric
+	UcID            uuid.UUID
+	UcRole          UserChallengeRole
+	UcStatus        UserChallengeStatus
+	UcJoinedAt      pgtype.Timestamptz
 }
 
 func (q *Queries) ListUserChallenges(ctx context.Context, userID uuid.UUID) ([]ListUserChallengesRow, error) {
@@ -201,6 +190,8 @@ func (q *Queries) ListUserChallenges(ctx context.Context, userID uuid.UUID) ([]L
 			&i.CreatedBy,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.MediaRequired,
+			&i.MediaFineAmount,
 			&i.UcID,
 			&i.UcRole,
 			&i.UcStatus,
@@ -221,7 +212,7 @@ UPDATE challenges
 SET status     = $1::challenge_status,
     updated_at = NOW()
 WHERE id       = $2::uuid
-RETURNING id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at
+RETURNING id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at, media_required, media_fine_amount
 `
 
 type UpdateChallengeStatusParams struct {
@@ -231,18 +222,5 @@ type UpdateChallengeStatusParams struct {
 
 func (q *Queries) UpdateChallengeStatus(ctx context.Context, arg UpdateChallengeStatusParams) (Challenge, error) {
 	row := q.db.QueryRow(ctx, updateChallengeStatus, arg.Status, arg.ID)
-	var i Challenge
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.InviteCode,
-		&i.Status,
-		&i.StartDate,
-		&i.EndDate,
-		&i.CreatedBy,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+	return scanChallenge(row)
 }

@@ -34,6 +34,8 @@ export interface Challenge {
   start_date: string;
   end_date: string;
   created_at: string;
+  media_required: boolean;
+  media_fine_amount: string;
 }
 
 export interface ChallengeListItem extends Challenge {
@@ -104,5 +106,5 @@ export interface SubmissionHistoryItem {
   submitted_at: string;
   metrics: MetricValueDetail[];
   total_points_earned: string;
-  media_key?: string;
+  media: string[];
 }

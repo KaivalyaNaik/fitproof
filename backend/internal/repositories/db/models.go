@@ -226,16 +226,25 @@ func (ns NullUserChallengeStatus) Value() (driver.Value, error) {
 }
 
 type Challenge struct {
-	ID          uuid.UUID
-	Name        string
-	Description *string
-	InviteCode  string
-	Status      ChallengeStatus
-	StartDate   pgtype.Date
-	EndDate     pgtype.Date
-	CreatedBy   uuid.UUID
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
+	ID              uuid.UUID
+	Name            string
+	Description     *string
+	InviteCode      string
+	Status          ChallengeStatus
+	StartDate       pgtype.Date
+	EndDate         pgtype.Date
+	CreatedBy       uuid.UUID
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	MediaRequired   bool
+	MediaFineAmount pgtype.Numeric
+}
+
+type SubmissionMedia struct {
+	ID           uuid.UUID
+	SubmissionID uuid.UUID
+	MediaKey     string
+	CreatedAt    pgtype.Timestamptz
 }
 
 type ChallengeMetric struct {

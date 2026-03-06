@@ -153,7 +153,7 @@ func main() {
 
 	cronCtx, cronCancel := context.WithCancel(context.Background())
 	defer cronCancel()
-	go runMissedSubmissionCron(cronCtx, subSvc, logger)
+	go runDailyCron(cronCtx, subSvc, logger)
 
 	serverErr := make(chan error, 1)
 	go func() {
@@ -182,7 +182,7 @@ func main() {
 	logger.Info("server stopped")
 }
 
-func runMissedSubmissionCron(ctx context.Context, svc *services.SubmissionService, logger *slog.Logger) {
+func runDailyCron(ctx context.Context, svc *services.SubmissionService, logger *slog.Logger) {
 	for {
 		now := time.Now().UTC()
 		next := time.Date(now.Year(), now.Month(), now.Day(), 0, 5, 0, 0, time.UTC)
@@ -199,6 +199,10 @@ func runMissedSubmissionCron(ctx context.Context, svc *services.SubmissionServic
 		logger.Info("cron: processing missed submissions", slog.String("date", date))
 		if err := svc.ProcessMissedSubmissions(ctx, date); err != nil {
 			logger.Error("cron: missed submissions failed", slog.String("error", err.Error()))
+		}
+		logger.Info("cron: processing missing media fines", slog.String("date", date))
+		if err := svc.ProcessMissingMedia(ctx, date); err != nil {
+			logger.Error("cron: missing media fines failed", slog.String("error", err.Error()))
 		}
 	}
 }

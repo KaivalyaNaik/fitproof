@@ -12,6 +12,8 @@ interface ChallengeDetailResponse {
   start_date: string;
   end_date: string;
   created_at: string;
+  media_required: boolean;
+  media_fine_amount: string;
   metrics: {
     id: string;
     metric_id: string;

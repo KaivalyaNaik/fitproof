@@ -42,7 +42,7 @@ type SubmissionHistoryItem struct {
 	SubmittedAt       string              `json:"submitted_at"`
 	Metrics           []MetricValueDetail `json:"metrics"`
 	TotalPointsEarned string              `json:"total_points_earned"`
-	MediaKey          *string             `json:"media_key,omitempty"`
+	Media             []string            `json:"media"`
 }
 
 type MetricValue struct {
@@ -231,6 +231,11 @@ func (s *SubmissionService) ListUserSubmissions(ctx context.Context, userID, cha
 		return nil, err
 	}
 
+	mediaRows, err := s.subRepo.ListSubmissionMediaBySubmissions(ctx, subIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	mvMap := make(map[uuid.UUID][]MetricValueDetail, len(subs))
 	ptMap := make(map[uuid.UUID]float64, len(subs))
 	for _, mv := range mvRows {
@@ -244,11 +249,20 @@ func (s *SubmissionService) ListUserSubmissions(ctx context.Context, userID, cha
 		ptMap[mv.SubmissionID] += numericF64(mv.PointsAwarded)
 	}
 
+	mediaMap := make(map[uuid.UUID][]string, len(subs))
+	for _, m := range mediaRows {
+		mediaMap[m.SubmissionID] = append(mediaMap[m.SubmissionID], m.MediaKey)
+	}
+
 	result := make([]SubmissionHistoryItem, len(subs))
 	for i, sub := range subs {
 		metrics := mvMap[sub.ID]
 		if metrics == nil {
 			metrics = []MetricValueDetail{}
+		}
+		media := mediaMap[sub.ID]
+		if media == nil {
+			media = []string{}
 		}
 		result[i] = SubmissionHistoryItem{
 			ID:                sub.ID,
@@ -257,13 +271,16 @@ func (s *SubmissionService) ListUserSubmissions(ctx context.Context, userID, cha
 			SubmittedAt:       sub.SubmittedAt.Time.Format(time.RFC3339),
 			Metrics:           metrics,
 			TotalPointsEarned: fmt.Sprintf("%.2f", ptMap[sub.ID]),
-			MediaKey:          sub.MediaKey,
+			Media:             media,
 		}
 	}
 	return result, nil
 }
 
-var ErrMediaNotConfigured = errors.New("media storage not configured")
+var (
+	ErrMediaNotConfigured = errors.New("media storage not configured")
+	ErrMediaLimitReached  = errors.New("maximum 4 media files per submission")
+)
 
 func (s *SubmissionService) UploadMedia(ctx context.Context, userID, challengeID, subID uuid.UUID, filename, contentType string, file io.Reader) (string, error) {
 	if s.media == nil {
@@ -289,18 +306,58 @@ func (s *SubmissionService) UploadMedia(ctx context.Context, userID, challengeID
 		return "", ErrNotMember
 	}
 
+	count, err := s.subRepo.CountSubmissionMedia(ctx, subID)
+	if err != nil {
+		return "", err
+	}
+	if count >= 4 {
+		return "", ErrMediaLimitReached
+	}
+
 	name := fmt.Sprintf("%s_%s_%s", challengeID, subID, filename)
-	fileID, err := s.media.Upload(ctx, name, contentType, file)
+	fileKey, err := s.media.Upload(ctx, name, contentType, file)
 	if err != nil {
 		return "", fmt.Errorf("upload media: %w", err)
 	}
 
-	if err := s.subRepo.SetMediaKey(ctx, subID, fileID); err != nil {
-		_ = s.media.Delete(ctx, fileID)
+	if _, err := s.subRepo.CreateSubmissionMedia(ctx, subID, fileKey); err != nil {
+		_ = s.media.Delete(ctx, fileKey)
 		return "", fmt.Errorf("store media key: %w", err)
 	}
 
-	return fileID, nil
+	return fileKey, nil
+}
+
+func (s *SubmissionService) ProcessMissingMedia(ctx context.Context, dateStr string) error {
+	date, err := parseDate(dateStr)
+	if err != nil {
+		return err
+	}
+
+	rows, err := s.subRepo.ListSubmittedWithoutMedia(ctx, date)
+	if err != nil {
+		return err
+	}
+
+	for _, row := range rows {
+		fineF := numericF64(row.MediaFineAmount)
+		if fineF <= 0 {
+			continue
+		}
+		tx, err := s.pool.Begin(ctx)
+		if err != nil {
+			return err
+		}
+		txSubRepo := repositories.NewSubmissionRepository(s.queries.WithTx(tx))
+		if _, err = txSubRepo.AddScoreFines(ctx, row.UserChallengeID, row.MediaFineAmount); err != nil {
+			tx.Rollback(ctx)
+			return err
+		}
+		if err = tx.Commit(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *SubmissionService) ProcessMissedSubmissions(ctx context.Context, dateStr string) error {

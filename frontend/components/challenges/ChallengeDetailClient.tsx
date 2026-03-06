@@ -194,7 +194,12 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
           <SubmissionHistory challengeId={challenge.id} />
         )}
         {activeTab === "submit" && (
-          <SubmitForm challengeId={challenge.id} metrics={challenge.metrics} />
+          <SubmitForm
+            challengeId={challenge.id}
+            metrics={challenge.metrics}
+            mediaRequired={challenge.media_required}
+            mediaFineAmount={challenge.media_fine_amount}
+          />
         )}
       </div>
 

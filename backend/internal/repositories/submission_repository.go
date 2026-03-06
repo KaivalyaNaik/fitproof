@@ -69,20 +69,22 @@ func (r *SubmissionRepository) GetSubmission(ctx context.Context, id uuid.UUID) 
 	return r.q.GetSubmission(ctx, id)
 }
 
-func (r *SubmissionRepository) SetMediaKey(ctx context.Context, id uuid.UUID, fileID string) error {
-	return r.q.SetSubmissionMediaKey(ctx, id, &fileID)
+func (r *SubmissionRepository) CreateSubmissionMedia(ctx context.Context, submissionID uuid.UUID, mediaKey string) (db.SubmissionMedia, error) {
+	return r.q.CreateSubmissionMedia(ctx, submissionID, mediaKey)
+}
+
+func (r *SubmissionRepository) CountSubmissionMedia(ctx context.Context, submissionID uuid.UUID) (int64, error) {
+	return r.q.CountSubmissionMedia(ctx, submissionID)
+}
+
+func (r *SubmissionRepository) ListSubmissionMediaBySubmissions(ctx context.Context, ids []uuid.UUID) ([]db.SubmissionMedia, error) {
+	return r.q.ListSubmissionMediaBySubmissions(ctx, ids)
 }
 
 func (r *SubmissionRepository) ListMediaKeysByChallenge(ctx context.Context, challengeID uuid.UUID) ([]string, error) {
-	keys, err := r.q.ListMediaKeysByChallenge(ctx, challengeID)
-	if err != nil {
-		return nil, err
-	}
-	result := make([]string, 0, len(keys))
-	for _, k := range keys {
-		if k != nil {
-			result = append(result, *k)
-		}
-	}
-	return result, nil
+	return r.q.ListMediaKeysByChallenge(ctx, challengeID)
+}
+
+func (r *SubmissionRepository) ListSubmittedWithoutMedia(ctx context.Context, date pgtype.Date) ([]db.ListSubmittedWithoutMediaRow, error) {
+	return r.q.ListSubmittedWithoutMedia(ctx, date)
 }

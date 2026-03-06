@@ -71,6 +71,8 @@ export function CreateChallengeForm() {
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [mediaRequired, setMediaRequired] = useState(false);
+  const [mediaFineAmount, setMediaFineAmount] = useState("");
   const [step1Error, setStep1Error] = useState<string | null>(null);
   const [step1Loading, setStep1Loading] = useState(false);
 
@@ -101,6 +103,8 @@ export function CreateChallengeForm() {
           description,
           start_date: startDate,
           end_date: endDate,
+          media_required: mediaRequired,
+          media_fine_amount: mediaRequired ? (mediaFineAmount || "0") : "0",
         }),
       });
       setCreatedChallenge(challenge);
@@ -214,6 +218,40 @@ export function CreateChallengeForm() {
               onChange={(e) => setEndDate(e.target.value)}
               required
             />
+          </div>
+
+          {/* Proof requirement */}
+          <div className="bg-zinc-50 rounded-2xl p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-zinc-900">Require proof upload</p>
+                <p className="text-xs text-zinc-400 mt-0.5">Participants must upload a photo or video (max 4)</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMediaRequired((v) => !v)}
+                className={[
+                  "relative w-10 h-6 rounded-full transition-colors shrink-0",
+                  mediaRequired ? "bg-zinc-900" : "bg-zinc-200",
+                ].join(" ")}
+              >
+                <span className={[
+                  "absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform",
+                  mediaRequired ? "translate-x-5" : "translate-x-1",
+                ].join(" ")} />
+              </button>
+            </div>
+            {mediaRequired && (
+              <Input
+                label="Fine for missing proof"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="e.g. 5"
+                value={mediaFineAmount}
+                onChange={(e) => setMediaFineAmount(e.target.value)}
+              />
+            )}
           </div>
 
           {step1Error && (

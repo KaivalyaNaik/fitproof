@@ -1,18 +1,21 @@
 -- name: CreateChallenge :one
-INSERT INTO challenges (name, description, invite_code, status, start_date, end_date, created_by)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING *;
+INSERT INTO challenges (name, description, invite_code, status, start_date, end_date, created_by, media_required, media_fine_amount)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at, media_required, media_fine_amount;
 
 -- name: GetChallengeByID :one
-SELECT * FROM challenges WHERE id = $1;
+SELECT id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at, media_required, media_fine_amount
+FROM challenges WHERE id = $1;
 
 -- name: GetChallengeByInviteCode :one
-SELECT * FROM challenges WHERE invite_code = $1;
+SELECT id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at, media_required, media_fine_amount
+FROM challenges WHERE invite_code = $1;
 
 -- name: ListUserChallenges :many
 SELECT
     c.id, c.name, c.description, c.invite_code, c.status,
     c.start_date, c.end_date, c.created_by, c.created_at, c.updated_at,
+    c.media_required, c.media_fine_amount,
     uc.id        AS uc_id,
     uc.role      AS uc_role,
     uc.status    AS uc_status,
@@ -42,4 +45,4 @@ UPDATE challenges
 SET status     = sqlc.arg(status)::challenge_status,
     updated_at = NOW()
 WHERE id       = sqlc.arg(id)::uuid
-RETURNING *;
+RETURNING id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at, media_required, media_fine_amount;

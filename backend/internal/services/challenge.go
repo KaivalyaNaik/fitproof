@@ -96,7 +96,7 @@ func parseDate(s string) (pgtype.Date, error) {
 	return pgtype.Date{Time: t, Valid: true}, nil
 }
 
-func (s *ChallengeService) CreateChallenge(ctx context.Context, userID uuid.UUID, name, description, startDate, endDate string) (ChallengeResult, error) {
+func (s *ChallengeService) CreateChallenge(ctx context.Context, userID uuid.UUID, name, description, startDate, endDate string, mediaRequired bool, mediaFineAmount string) (ChallengeResult, error) {
 	start, err := parseDate(startDate)
 	if err != nil {
 		return ChallengeResult{}, err
@@ -109,6 +109,11 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, userID uuid.UUID
 	var descPtr *string
 	if description != "" {
 		descPtr = &description
+	}
+
+	mediaFine, err := parseNumeric(mediaFineAmount)
+	if err != nil {
+		return ChallengeResult{}, fmt.Errorf("invalid media_fine_amount %q: %w", mediaFineAmount, err)
 	}
 
 	for attempt := 0; attempt < 3; attempt++ {
@@ -125,13 +130,15 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, userID uuid.UUID
 		txRepo := repositories.NewChallengeRepository(s.queries.WithTx(tx))
 
 		challenge, err := txRepo.CreateChallenge(ctx, db.CreateChallengeParams{
-			Name:        name,
-			Description: descPtr,
-			InviteCode:  code,
-			Status:      db.ChallengeStatusActive,
-			StartDate:   start,
-			EndDate:     end,
-			CreatedBy:   userID,
+			Name:            name,
+			Description:     descPtr,
+			InviteCode:      code,
+			Status:          db.ChallengeStatusActive,
+			StartDate:       start,
+			EndDate:         end,
+			CreatedBy:       userID,
+			MediaRequired:   mediaRequired,
+			MediaFineAmount: mediaFine,
 		})
 		if err != nil {
 			_ = tx.Rollback(ctx)
@@ -282,7 +289,7 @@ func (s *ChallengeService) CloseChallenge(ctx context.Context, challengeID, user
 		return db.Challenge{}, err
 	}
 
-	// Asynchronously delete media files from Drive — don't fail the close if Drive is unavailable.
+	// Asynchronously delete media files from R2 — don't fail the close if storage is unavailable.
 	if s.media != nil && s.subRepo != nil {
 		go func() {
 			bgCtx := context.Background()

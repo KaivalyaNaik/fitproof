@@ -133,39 +133,3 @@ func (q *Queries) GetSubmission(ctx context.Context, id uuid.UUID) (DailySubmiss
 	return i, err
 }
 
-const setSubmissionMediaKey = `-- name: SetSubmissionMediaKey :exec
-UPDATE daily_submissions SET media_key = $2 WHERE id = $1
-`
-
-func (q *Queries) SetSubmissionMediaKey(ctx context.Context, id uuid.UUID, mediaKey *string) error {
-	_, err := q.db.Exec(ctx, setSubmissionMediaKey, id, mediaKey)
-	return err
-}
-
-const listMediaKeysByChallenge = `-- name: ListMediaKeysByChallenge :many
-SELECT ds.media_key
-FROM daily_submissions ds
-JOIN user_challenges uc ON uc.id = ds.user_challenge_id
-WHERE uc.challenge_id = $1
-  AND ds.media_key IS NOT NULL
-`
-
-func (q *Queries) ListMediaKeysByChallenge(ctx context.Context, challengeID uuid.UUID) ([]*string, error) {
-	rows, err := q.db.Query(ctx, listMediaKeysByChallenge, challengeID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*string
-	for rows.Next() {
-		var mediaKey *string
-		if err := rows.Scan(&mediaKey); err != nil {
-			return nil, err
-		}
-		items = append(items, mediaKey)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}

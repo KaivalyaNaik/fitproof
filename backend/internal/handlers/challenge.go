@@ -31,10 +31,12 @@ func NewChallengeHandler(svc *services.ChallengeService, metricRepo *repositorie
 // ── request types ────────────────────────────────────────────────────────────
 
 type createChallengeRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	StartDate   string `json:"start_date"`
-	EndDate     string `json:"end_date"`
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	StartDate       string `json:"start_date"`
+	EndDate         string `json:"end_date"`
+	MediaRequired   bool   `json:"media_required"`
+	MediaFineAmount string `json:"media_fine_amount"`
 }
 
 type joinChallengeRequest struct {
@@ -76,14 +78,16 @@ type membershipResponse struct {
 }
 
 type challengeResponse struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	InviteCode  string `json:"invite_code"`
-	Status      string `json:"status"`
-	StartDate   string `json:"start_date"`
-	EndDate     string `json:"end_date"`
-	CreatedAt   string `json:"created_at"`
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	Description     string `json:"description,omitempty"`
+	InviteCode      string `json:"invite_code"`
+	Status          string `json:"status"`
+	StartDate       string `json:"start_date"`
+	EndDate         string `json:"end_date"`
+	CreatedAt       string `json:"created_at"`
+	MediaRequired   bool   `json:"media_required"`
+	MediaFineAmount string `json:"media_fine_amount"`
 }
 
 type challengeDetailResponse struct {
@@ -110,14 +114,16 @@ func toChallengeResponse(c db.Challenge) challengeResponse {
 		desc = *c.Description
 	}
 	return challengeResponse{
-		ID:          c.ID.String(),
-		Name:        c.Name,
-		Description: desc,
-		InviteCode:  c.InviteCode,
-		Status:      string(c.Status),
-		StartDate:   c.StartDate.Time.Format("2006-01-02"),
-		EndDate:     c.EndDate.Time.Format("2006-01-02"),
-		CreatedAt:   c.CreatedAt.Time.Format(time.RFC3339),
+		ID:              c.ID.String(),
+		Name:            c.Name,
+		Description:     desc,
+		InviteCode:      c.InviteCode,
+		Status:          string(c.Status),
+		StartDate:       c.StartDate.Time.Format("2006-01-02"),
+		EndDate:         c.EndDate.Time.Format("2006-01-02"),
+		CreatedAt:       c.CreatedAt.Time.Format(time.RFC3339),
+		MediaRequired:   c.MediaRequired,
+		MediaFineAmount: numericString(c.MediaFineAmount),
 	}
 }
 
@@ -205,7 +211,11 @@ func (h *ChallengeHandler) CreateChallenge(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	result, err := h.svc.CreateChallenge(r.Context(), userID, req.Name, req.Description, req.StartDate, req.EndDate)
+	mediaFine := req.MediaFineAmount
+	if mediaFine == "" {
+		mediaFine = "0"
+	}
+	result, err := h.svc.CreateChallenge(r.Context(), userID, req.Name, req.Description, req.StartDate, req.EndDate, req.MediaRequired, mediaFine)
 	if err != nil {
 		mapChallengeError(h, w, err, "create challenge")
 		return
@@ -277,14 +287,16 @@ func (h *ChallengeHandler) ListUserChallenges(w http.ResponseWriter, r *http.Req
 		}
 		out[i] = challengeListItem{
 			challengeResponse: challengeResponse{
-				ID:          row.ID.String(),
-				Name:        row.Name,
-				Description: desc,
-				InviteCode:  row.InviteCode,
-				Status:      string(row.Status),
-				StartDate:   row.StartDate.Time.Format("2006-01-02"),
-				EndDate:     row.EndDate.Time.Format("2006-01-02"),
-				CreatedAt:   row.CreatedAt.Time.Format(time.RFC3339),
+				ID:              row.ID.String(),
+				Name:            row.Name,
+				Description:     desc,
+				InviteCode:      row.InviteCode,
+				Status:          string(row.Status),
+				StartDate:       row.StartDate.Time.Format("2006-01-02"),
+				EndDate:         row.EndDate.Time.Format("2006-01-02"),
+				CreatedAt:       row.CreatedAt.Time.Format(time.RFC3339),
+				MediaRequired:   row.MediaRequired,
+				MediaFineAmount: numericString(row.MediaFineAmount),
 			},
 			Membership: membershipResponse{
 				ID:       row.UcID.String(),
