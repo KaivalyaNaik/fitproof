@@ -12,7 +12,7 @@ import { SubmissionHistory } from "./SubmissionHistory";
 import { ChallengeFeed } from "./ChallengeFeed";
 import { SubmitForm } from "./SubmitForm";
 import { AddMetricsModal } from "./AddMetricsModal";
-import { formatDate, statusLabel } from "@/lib/utils";
+import { formatDate, formatFines, statusLabel } from "@/lib/utils";
 
 type Tab = "leaderboard" | "feed" | "history" | "submit";
 
@@ -187,8 +187,11 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
       {/* Tab content */}
       <div>
         {activeTab === "leaderboard" && (
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
-            <LeaderboardTable entries={leaderboard} />
+          <div className="flex flex-col gap-3">
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+              <LeaderboardTable entries={leaderboard} />
+            </div>
+            <WeeklyFinesReveal entries={leaderboard} />
           </div>
         )}
         {activeTab === "feed" && (
@@ -280,5 +283,64 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
         </div>
       </Modal>
     </main>
+  );
+}
+
+function WeeklyFinesReveal({ entries }: { entries: LeaderboardEntry[] }) {
+  const [revealed, setRevealed] = useState(false);
+
+  const hasFines = entries.some((e) => parseFloat(e.total_fines) > 0);
+
+  return (
+    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+      <button
+        onClick={() => setRevealed((v) => !v)}
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--surface-raised)] transition-colors cursor-pointer"
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="text-lg">💸</span>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-[var(--text)]">Weekly Fines</p>
+            <p className="text-[11px] text-[var(--text-muted)]">
+              {revealed ? "Tap to hide" : "Tap to reveal who got fined"}
+            </p>
+          </div>
+        </div>
+        <svg
+          width="16" height="16" viewBox="0 0 16 16" fill="none"
+          className={`text-[var(--text-muted)] transition-transform duration-200 ${revealed ? "rotate-180" : ""}`}
+        >
+          <path d="M3 6l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {revealed && (
+        <div className="border-t border-[var(--border)]">
+          {!hasFines ? (
+            <p className="px-5 py-4 text-sm text-[var(--text-muted)] text-center">
+              No fines this week 🎉
+            </p>
+          ) : (
+            entries
+              .filter((e) => parseFloat(e.total_fines) > 0)
+              .sort((a, b) => parseFloat(b.total_fines) - parseFloat(a.total_fines))
+              .map((entry, i) => (
+                <div
+                  key={entry.user_id}
+                  className={[
+                    "flex items-center justify-between px-5 py-3",
+                    i > 0 ? "border-t border-[var(--border-subtle)]" : "",
+                  ].join(" ")}
+                >
+                  <span className="text-sm text-[var(--text)]">{entry.display_name}</span>
+                  <span className="text-sm font-semibold text-[var(--success)] font-mono-nums tabular-nums">
+                    {formatFines(entry.total_fines)}
+                  </span>
+                </div>
+              ))
+          )}
+        </div>
+      )}
+    </div>
   );
 }

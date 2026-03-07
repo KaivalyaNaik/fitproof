@@ -1,5 +1,5 @@
 import type { LeaderboardEntry } from "@/lib/types";
-import { formatPoints, formatFines, formatDate } from "@/lib/utils";
+import { formatPoints, formatDate } from "@/lib/utils";
 
 export function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
   if (entries.length === 0) {
@@ -23,9 +23,6 @@ export function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
             </th>
             <th className="px-5 py-3.5 text-right text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
               Points
-            </th>
-            <th className="px-5 py-3.5 text-right text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
-              Fines
             </th>
             <th className="px-5 py-3.5 text-right text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest hidden sm:table-cell">
               Last sub
@@ -63,13 +60,6 @@ export function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
               </td>
               <td className="px-5 py-3.5 text-right font-mono text-[var(--text)] tabular-nums text-xs font-mono-nums">
                 {formatPoints(entry.total_points)}
-              </td>
-              <td className="px-5 py-3.5 text-right font-mono tabular-nums text-xs font-mono-nums">
-                <span className={parseFloat(entry.total_fines) > 0 ? "text-[var(--danger)]" : "text-[var(--text-dim)]"}>
-                  {parseFloat(entry.total_fines) > 0
-                    ? formatFines(entry.total_fines)
-                    : "—"}
-                </span>
               </td>
               <td className="px-5 py-3.5 text-right text-[var(--text-muted)] text-xs hidden sm:table-cell tabular-nums font-mono-nums">
                 {entry.last_submission_date

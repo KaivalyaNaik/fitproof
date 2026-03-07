@@ -5,7 +5,7 @@ import { ChallengeCard } from "@/components/challenges/ChallengeCard";
 import { JoinChallengeButton } from "@/components/challenges/JoinChallengeButton";
 import { Button } from "@/components/ui/Button";
 import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
-import { formatPoints, formatFines } from "@/lib/utils";
+import { formatPoints } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const [challenges, stats, user] = await Promise.all([
@@ -21,10 +21,9 @@ export default async function DashboardPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-8 sm:mb-12">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-8 sm:mb-12">
         <StatTile label="Challenges" value={String(stats.challenges_joined)} />
         <StatTile label="Points" value={formatPoints(stats.total_points)} />
-        <StatTile label="Fines" value={formatFines(stats.total_fines)} accent="danger" />
         <StatTile
           label="Submissions"
           value={`${stats.total_submissions}/${stats.total_submissions + stats.missed_submissions}`}
@@ -61,26 +60,13 @@ export default async function DashboardPage() {
   );
 }
 
-function StatTile({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: "danger";
-}) {
+function StatTile({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 sm:p-5">
       <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">
         {label}
       </p>
-      <p
-        className={[
-          "text-xl font-semibold tabular-nums truncate font-mono-nums",
-          accent === "danger" ? "text-[var(--danger)]" : "text-[var(--text)]",
-        ].join(" ")}
-      >
+      <p className="text-xl font-semibold tabular-nums truncate font-mono-nums text-[var(--text)]">
         {value}
       </p>
     </div>
