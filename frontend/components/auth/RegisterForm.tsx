@@ -26,7 +26,7 @@ export function RegisterForm() {
         method: "POST",
         body: JSON.stringify({ email, password, display_name: displayName }),
       });
-      router.push("/verify-email");
+      router.push("/dashboard");
     } catch (err) {
       if (err instanceof ApiResponseError) {
         setError(

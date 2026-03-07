@@ -4,7 +4,6 @@ import type { ChallengeListItem, UserStats, User } from "@/lib/types";
 import { ChallengeCard } from "@/components/challenges/ChallengeCard";
 import { JoinChallengeButton } from "@/components/challenges/JoinChallengeButton";
 import { Button } from "@/components/ui/Button";
-import { EmailVerificationBanner } from "@/components/auth/EmailVerificationBanner";
 import { formatPoints } from "@/lib/utils";
 
 export default async function DashboardPage() {
@@ -16,10 +15,6 @@ export default async function DashboardPage() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-      {!user.email_verified && (
-        <EmailVerificationBanner userEmail={user.email} />
-      )}
-
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-8 sm:mb-12">
         <StatTile label="Challenges" value={String(stats.challenges_joined)} />
