@@ -191,7 +191,7 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
               <LeaderboardTable entries={leaderboard} />
             </div>
-            <WeeklyFinesReveal entries={leaderboard} />
+            {new Date().getDay() === 0 && <WeeklyFinesReveal entries={leaderboard} />}
           </div>
         )}
         {activeTab === "feed" && (
