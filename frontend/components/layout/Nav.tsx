@@ -13,7 +13,7 @@ export async function Nav() {
           <img
             src="/logo-full.png"
             alt="FitProof"
-            style={{ height: 68, width: "auto", display: "block" }}
+            style={{ height: 44, width: "auto", display: "block" }}
           />
         </Link>
         {user && <NavClient displayName={user.display_name} />}
