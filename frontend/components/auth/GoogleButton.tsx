@@ -2,7 +2,7 @@ export function GoogleButton() {
   return (
     <a
       href="/api/auth/google"
-      className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-zinc-200 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 active:bg-zinc-100 transition-colors"
+      className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] py-2.5 text-sm font-medium text-[var(--text)] hover:border-[var(--text-muted)] hover:bg-[var(--surface)] active:opacity-80 transition-all"
     >
       {/* Google "G" logo */}
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">

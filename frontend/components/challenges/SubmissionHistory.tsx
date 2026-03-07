@@ -46,13 +46,13 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
 
   if (loading) {
     return (
-      <div className="py-14 text-center text-zinc-400 text-sm">Loading…</div>
+      <div className="py-14 text-center text-[var(--text-muted)] text-sm">Loading…</div>
     );
   }
 
   if (history.length === 0) {
     return (
-      <div className="py-14 text-center text-zinc-400 text-sm">
+      <div className="py-14 text-center text-[var(--text-muted)] text-sm">
         No submissions yet.
       </div>
     );
@@ -64,14 +64,14 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
         {history.map((item) => (
           <div
             key={item.id}
-            className="bg-white rounded-2xl ring-1 ring-zinc-100 overflow-hidden"
+            className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden"
           >
             <div className="flex items-center justify-between px-5 py-4">
               <div>
-                <p className="text-sm font-semibold text-zinc-900">
+                <p className="text-sm font-semibold text-[var(--text)]">
                   {formatDate(item.date)}
                 </p>
-                <p className="text-[11px] text-zinc-400 mt-0.5">
+                <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
                   {item.submission_type === "missed"
                     ? "Missed"
                     : `Submitted at ${formatTimestamp(item.submitted_at)}`}
@@ -79,18 +79,18 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
               </div>
               <div className="text-right flex items-center gap-2">
                 {item.submission_type === "missed" && (
-                  <span className="text-[11px] bg-red-50 text-red-600 ring-1 ring-red-100 px-2 py-0.5 rounded-md font-medium">
+                  <span className="text-[10px] bg-[var(--danger-dim)] text-[var(--danger)] border border-[var(--danger)]/20 px-2 py-0.5 rounded-md font-semibold">
                     Missed
                   </span>
                 )}
-                <p className="font-mono font-semibold text-sm tabular-nums text-zinc-900">
+                <p className="font-mono-nums font-semibold text-sm tabular-nums text-[var(--text)]">
                   {formatPoints(item.total_points_earned)}
                 </p>
               </div>
             </div>
 
             {item.metrics.length > 0 && (
-              <div className="border-t border-zinc-50 px-5 py-3 flex flex-col gap-2.5">
+              <div className="border-t border-[var(--border-subtle)] px-5 py-3 flex flex-col gap-2.5">
                 {item.metrics.map((mv) => (
                   <div
                     key={mv.metric_id}
@@ -99,19 +99,19 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
                     <div className="flex items-center gap-2">
                       <span
                         className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                          mv.passed ? "bg-emerald-500" : "bg-red-400"
+                          mv.passed ? "bg-[var(--success)]" : "bg-[var(--danger)]"
                         }`}
                       />
-                      <span className="text-xs text-zinc-600">{mv.metric_name}</span>
+                      <span className="text-xs text-[var(--text-muted)]">{mv.metric_name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-[11px] text-zinc-400 tabular-nums">
+                      <span className="font-mono-nums text-[11px] text-[var(--text-dim)] tabular-nums">
                         {mv.value}
                       </span>
                       <span
                         className={[
-                          "text-[11px] font-medium tabular-nums",
-                          mv.passed ? "text-emerald-600" : "text-zinc-300",
+                          "text-[11px] font-medium tabular-nums font-mono-nums",
+                          mv.passed ? "text-[var(--success)]" : "text-[var(--text-dim)]",
                         ].join(" ")}
                       >
                         {mv.passed ? `+${formatPoints(mv.points_awarded)}` : "0 pts"}
@@ -123,13 +123,13 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
             )}
 
             {item.media.length > 0 && (
-              <div className="border-t border-zinc-50 px-5 py-3">
+              <div className="border-t border-[var(--border-subtle)] px-5 py-3">
                 <div className="flex gap-1.5">
                   {item.media.slice(0, 4).map((url, idx) => (
                     <button
                       key={url}
                       onClick={() => setLightbox({ media: item.media, index: idx })}
-                      className="w-14 h-14 rounded-lg overflow-hidden shrink-0 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      className="w-14 h-14 rounded-lg overflow-hidden shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ring-offset-1 ring-offset-[var(--surface)]"
                     >
                       {isVideo(url) ? (
                         <video
@@ -164,7 +164,7 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 z-10 text-white/70 hover:text-white text-2xl leading-none p-2"
+            className="absolute top-4 right-4 z-10 text-white/70 hover:text-white text-2xl leading-none p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
             aria-label="Close"
           >
             ✕
@@ -174,7 +174,7 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
           {lightbox.index > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(-1); }}
-              className="absolute left-4 z-10 text-white/70 hover:text-white text-3xl p-3"
+              className="absolute left-4 z-10 text-white/70 hover:text-white text-3xl p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
               aria-label="Previous"
             >
               ‹
@@ -192,14 +192,14 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
                 src={lightbox.media[lightbox.index]}
                 controls
                 autoPlay
-                className="max-h-[85vh] max-w-full rounded-lg"
+                className="max-h-[85vh] max-w-full rounded-xl"
               />
             ) : (
               <img
                 key={lightbox.media[lightbox.index]}
                 src={lightbox.media[lightbox.index]}
                 alt=""
-                className="max-h-[90vh] max-w-full object-contain rounded-lg"
+                className="max-h-[90vh] max-w-full object-contain rounded-xl"
               />
             )}
           </div>
@@ -208,7 +208,7 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
           {lightbox.index < lightbox.media.length - 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(1); }}
-              className="absolute right-4 z-10 text-white/70 hover:text-white text-3xl p-3"
+              className="absolute right-4 z-10 text-white/70 hover:text-white text-3xl p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
               aria-label="Next"
             >
               ›
@@ -221,8 +221,8 @@ export function SubmissionHistory({ challengeId }: { challengeId: string }) {
               {lightbox.media.map((_, i) => (
                 <span
                   key={i}
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    i === lightbox.index ? "bg-white" : "bg-white/30"
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    i === lightbox.index ? "bg-white scale-125" : "bg-white/30"
                   }`}
                 />
               ))}

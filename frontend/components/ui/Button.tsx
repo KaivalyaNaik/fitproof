@@ -7,19 +7,19 @@ type Size = "sm" | "md" | "lg";
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    "bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-950 border border-transparent",
+    "bg-[var(--accent)] text-[var(--accent-fg)] hover:brightness-110 active:brightness-95 border border-transparent font-semibold",
   secondary:
-    "bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-50 active:bg-zinc-100",
+    "bg-[var(--surface-raised)] text-[var(--text)] border border-[var(--border)] hover:border-[var(--text-muted)] hover:bg-[var(--surface)]",
   danger:
-    "bg-red-500 text-white hover:bg-red-600 active:bg-red-700 border border-transparent",
+    "bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/25 hover:bg-[var(--danger)]/20",
   ghost:
-    "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200 border border-transparent",
+    "text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-raised)] border border-transparent",
 };
 
 const sizeClasses: Record<Size, string> = {
   sm: "px-3 py-1.5 text-xs font-medium",
-  md: "px-4 py-2 text-sm font-medium",
-  lg: "px-6 py-3 text-sm font-medium",
+  md: "px-4 py-2.5 text-sm font-medium",
+  lg: "px-6 py-3 text-sm font-semibold",
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -46,9 +46,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={[
-          "inline-flex items-center justify-center gap-2 rounded-lg",
-          "transition-all duration-150",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2",
+          "inline-flex items-center justify-center gap-2 rounded-xl",
+          "transition-all duration-150 cursor-pointer",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
           "disabled:opacity-40 disabled:cursor-not-allowed",
           variantClasses[variant],
           sizeClasses[size],

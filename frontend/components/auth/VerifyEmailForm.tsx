@@ -88,8 +88,8 @@ export function VerifyEmailForm() {
   return (
     <>
       <div className="mb-7">
-        <h1 className="text-xl font-semibold text-zinc-900 mb-1">Verify your email</h1>
-        <p className="text-sm text-zinc-400">
+        <h1 className="text-xl font-semibold text-[var(--text)] mb-1">Verify your email</h1>
+        <p className="text-sm text-[var(--text-muted)]">
           {sent === true
             ? "We sent a 6-digit code to your email address."
             : sent === "failed"
@@ -102,7 +102,7 @@ export function VerifyEmailForm() {
         <div className="flex flex-col gap-1.5">
           <label
             htmlFor="code"
-            className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest"
+            className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest"
           >
             Verification code
           </label>
@@ -117,12 +117,12 @@ export function VerifyEmailForm() {
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             required
-            className="block w-full rounded-xl border border-zinc-200 px-3.5 py-3 text-2xl font-mono tracking-[0.5em] text-center text-zinc-900 placeholder-zinc-300 focus:outline-none focus:border-zinc-900 transition-colors"
+            className="block w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 text-2xl font-mono tracking-[0.5em] text-center text-[var(--text)] placeholder-[var(--text-dim)] focus:outline-none focus:border-[var(--accent)] transition-colors"
           />
         </div>
 
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3.5 py-2.5">
+          <p className="text-sm text-[var(--danger)] bg-[var(--danger-dim)] border border-[var(--danger)]/20 rounded-xl px-3.5 py-2.5">
             {error}
           </p>
         )}
@@ -133,14 +133,14 @@ export function VerifyEmailForm() {
       </form>
 
       <div className="flex items-center justify-between mt-5">
-        <p className="text-xs text-zinc-400">Didn&apos;t receive it?</p>
+        <p className="text-xs text-[var(--text-dim)]">Didn&apos;t receive it?</p>
         {cooldown > 0 ? (
-          <span className="text-xs text-zinc-400 tabular-nums">Resend in {cooldown}s</span>
+          <span className="text-xs text-[var(--text-dim)] tabular-nums">Resend in {cooldown}s</span>
         ) : (
           <button
             type="button"
             onClick={handleResend}
-            className="text-xs text-zinc-700 hover:text-zinc-900 font-medium underline underline-offset-2 transition-colors"
+            className="text-xs text-[var(--text-muted)] hover:text-[var(--text)] font-medium underline underline-offset-2 transition-colors"
           >
             Resend code
           </button>

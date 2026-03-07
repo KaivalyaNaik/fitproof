@@ -23,28 +23,28 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
           className={[
             "w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0",
             step >= 1
-              ? "bg-zinc-900 text-white"
-              : "border-2 border-zinc-200 text-zinc-400",
+              ? "bg-[var(--accent)] text-[var(--accent-fg)]"
+              : "border-2 border-[var(--border)] text-[var(--text-muted)]",
           ].join(" ")}
         >
           {step > 1 ? (
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="var(--accent-fg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           ) : "1"}
         </div>
-        <span className="text-xs font-semibold text-zinc-900">
+        <span className="text-xs font-semibold text-[var(--text)]">
           Challenge Info
         </span>
       </div>
-      <div className="flex-1 h-px bg-zinc-100 mx-1" />
+      <div className="flex-1 h-px bg-[var(--border)] mx-1" />
       <div className="flex items-center gap-2.5">
         <div
           className={[
             "w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0",
             step >= 2
-              ? "bg-zinc-900 text-white"
-              : "border-2 border-zinc-200 text-zinc-400",
+              ? "bg-[var(--accent)] text-[var(--accent-fg)]"
+              : "border-2 border-[var(--border)] text-[var(--text-muted)]",
           ].join(" ")}
         >
           2
@@ -52,7 +52,7 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
         <span
           className={[
             "text-xs font-semibold",
-            step >= 2 ? "text-zinc-900" : "text-zinc-400",
+            step >= 2 ? "text-[var(--text)]" : "text-[var(--text-dim)]",
           ].join(" ")}
         >
           Add Metrics
@@ -163,11 +163,11 @@ export function CreateChallengeForm() {
   const today = new Date().toISOString().split("T")[0];
 
   const selectClass =
-    "block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 bg-white focus:outline-none focus:border-zinc-900 transition-colors";
+    "block w-full rounded-xl border border-[var(--border)] pl-3.5 pr-9 py-2.5 text-sm text-[var(--text)] bg-[var(--surface)] focus:outline-none focus:border-[var(--accent)] transition-colors appearance-none cursor-pointer";
 
   return (
     <div className="max-w-xl mx-auto">
-      <h1 className="text-xl font-semibold text-zinc-900 mb-8">New Challenge</h1>
+      <h1 className="text-xl font-semibold text-[var(--text)] mb-8">New Challenge</h1>
       <StepIndicator step={step} />
 
       {step === 1 && (
@@ -183,17 +183,17 @@ export function CreateChallengeForm() {
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="description"
-              className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest"
+              className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest"
             >
               Description{" "}
-              <span className="normal-case tracking-normal text-zinc-300">
+              <span className="normal-case tracking-normal text-[var(--text-dim)]">
                 (optional)
               </span>
             </label>
             <textarea
               id="description"
               rows={3}
-              className="block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 resize-none transition-colors"
+              className="block w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm text-[var(--text)] placeholder-[var(--text-dim)] focus:outline-none focus:border-[var(--accent)] resize-none transition-colors"
               placeholder="What's this challenge about?"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -221,11 +221,11 @@ export function CreateChallengeForm() {
           </div>
 
           {/* Proof requirement */}
-          <div className="bg-zinc-50 rounded-2xl p-4 flex flex-col gap-3">
+          <div className="bg-[var(--surface-raised)] border border-[var(--border)] rounded-2xl p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-zinc-900">Require proof upload</p>
-                <p className="text-xs text-zinc-400 mt-0.5">Participants must upload a photo or video (max 4)</p>
+                <p className="text-sm font-semibold text-[var(--text)]">Require proof upload</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">Participants must upload a photo or video (max 4)</p>
               </div>
               <button
                 type="button"
@@ -236,10 +236,10 @@ export function CreateChallengeForm() {
               >
                 <div className={[
                   "relative w-11 h-6 rounded-full transition-colors duration-200",
-                  mediaRequired ? "bg-indigo-600" : "bg-zinc-200",
+                  mediaRequired ? "bg-[var(--accent)]" : "bg-[var(--border)]",
                 ].join(" ")}>
                   <div className={[
-                    "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm border border-zinc-200 transition-transform duration-200",
+                    "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm border border-black/10 transition-transform duration-200",
                     mediaRequired ? "translate-x-5" : "translate-x-0",
                   ].join(" ")} />
                 </div>
@@ -259,7 +259,7 @@ export function CreateChallengeForm() {
           </div>
 
           {step1Error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3.5 py-2.5">
+            <p className="text-sm text-[var(--danger)] bg-[var(--danger-dim)] border border-[var(--danger)]/20 rounded-xl px-3.5 py-2.5">
               {step1Error}
             </p>
           )}
@@ -273,10 +273,10 @@ export function CreateChallengeForm() {
       {step === 2 && (
         <div className="flex flex-col gap-4">
           <div className="mb-2">
-            <h2 className="text-sm font-semibold text-zinc-900 mb-1">
+            <h2 className="text-sm font-semibold text-[var(--text)] mb-1">
               Add metrics to track
             </h2>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-[var(--text-muted)]">
               Define what participants log each day and how they earn points.
             </p>
           </div>
@@ -284,17 +284,17 @@ export function CreateChallengeForm() {
           {metricRows.map((row, i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl ring-1 ring-zinc-100 p-5 flex flex-col gap-4"
+              className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 flex flex-col gap-4"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">
+                <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
                   Metric {i + 1}
                 </span>
                 {metricRows.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeRow(i)}
-                    className="text-xs text-red-500 hover:text-red-700 font-medium"
+                    className="text-xs text-[var(--danger)] hover:text-[var(--danger)]/80 font-medium transition-colors"
                   >
                     Remove
                   </button>
@@ -302,32 +302,39 @@ export function CreateChallengeForm() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">
+                <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
                   Metric
                 </label>
-                <select
-                  className={selectClass}
-                  value={row.metric_id}
-                  onChange={(e) => updateRow(i, "metric_id", e.target.value)}
-                >
-                  <option value="">Select a metric…</option>
-                  {metrics.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} ({m.unit})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    className={selectClass}
+                    value={row.metric_id}
+                    onChange={(e) => updateRow(i, "metric_id", e.target.value)}
+                  >
+                    <option value="">Select a metric…</option>
+                    {metrics.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} ({m.unit})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 4l4 4 4-4" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-lg w-fit">
+              <div className="flex items-center gap-1 p-1 bg-[var(--surface-raised)] border border-[var(--border)] rounded-xl w-fit">
                 {(["min", "max"] as const).map((type) => (
                   <label
                     key={type}
                     className={[
-                      "px-3 py-1 text-xs font-semibold rounded-md cursor-pointer transition-all",
+                      "px-3 py-1 text-xs font-semibold rounded-lg cursor-pointer transition-all",
                       row.metric_type === type
-                        ? "bg-white text-zinc-900 shadow-sm"
-                        : "text-zinc-500",
+                        ? "bg-[var(--accent)] text-[var(--accent-fg)]"
+                        : "text-[var(--text-muted)] hover:text-[var(--text)]",
                     ].join(" ")}
                   >
                     <input
@@ -377,13 +384,13 @@ export function CreateChallengeForm() {
           <button
             type="button"
             onClick={addRow}
-            className="text-xs text-zinc-500 hover:text-zinc-900 font-medium self-start transition-colors"
+            className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] font-medium self-start transition-colors"
           >
             + Add another metric
           </button>
 
           {step2Error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3.5 py-2.5">
+            <p className="text-sm text-[var(--danger)] bg-[var(--danger-dim)] border border-[var(--danger)]/20 rounded-xl px-3.5 py-2.5">
               {step2Error}
             </p>
           )}
@@ -392,7 +399,7 @@ export function CreateChallengeForm() {
             <button
               type="button"
               onClick={() => router.push(`/challenges/${createdChallenge!.id}`)}
-              className="text-xs text-zinc-400 hover:text-zinc-700 font-medium transition-colors"
+              className="text-xs text-[var(--text-dim)] hover:text-[var(--text-muted)] font-medium transition-colors"
             >
               Skip for now
             </button>

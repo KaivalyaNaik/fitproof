@@ -78,7 +78,7 @@ export function AddMetricsModal({ open, onClose, challengeId }: AddMetricsModalP
   }
 
   const selectClass =
-    "block w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 bg-white focus:outline-none focus:border-zinc-900 transition-colors";
+    "block w-full rounded-xl border border-[var(--border)] pl-3.5 pr-9 py-2.5 text-sm text-[var(--text)] bg-[var(--surface)] focus:outline-none focus:border-[var(--accent)] transition-colors appearance-none cursor-pointer";
 
   return (
     <Modal open={open} onClose={onClose} title="Add Metrics">
@@ -86,17 +86,17 @@ export function AddMetricsModal({ open, onClose, challengeId }: AddMetricsModalP
         {rows.map((row, i) => (
           <div
             key={i}
-            className="bg-zinc-50 rounded-xl p-4 flex flex-col gap-3.5"
+            className="bg-[var(--surface-raised)] border border-[var(--border)] rounded-xl p-4 flex flex-col gap-3.5"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">
+              <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
                 Metric {i + 1}
               </span>
               {rows.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeRow(i)}
-                  className="text-xs text-red-500 hover:text-red-700 font-medium"
+                  className="text-xs text-[var(--danger)] hover:text-[var(--danger)]/80 font-medium transition-colors"
                 >
                   Remove
                 </button>
@@ -104,32 +104,39 @@ export function AddMetricsModal({ open, onClose, challengeId }: AddMetricsModalP
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">
+              <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
                 Metric
               </label>
-              <select
-                className={selectClass}
-                value={row.metric_id}
-                onChange={(e) => updateRow(i, "metric_id", e.target.value)}
-              >
-                <option value="">Select a metric…</option>
-                {catalog.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.unit})
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  className={selectClass}
+                  value={row.metric_id}
+                  onChange={(e) => updateRow(i, "metric_id", e.target.value)}
+                >
+                  <option value="">Select a metric…</option>
+                  {catalog.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} ({m.unit})
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 4l4 4 4-4" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-lg w-fit">
+            <div className="flex items-center gap-1 p-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg w-fit">
               {(["min", "max"] as const).map((type) => (
                 <label
                   key={type}
                   className={[
                     "px-3 py-1 text-xs font-semibold rounded-md cursor-pointer transition-all",
                     row.metric_type === type
-                      ? "bg-white text-zinc-900 shadow-sm"
-                      : "text-zinc-500",
+                      ? "bg-[var(--accent)] text-[var(--accent-fg)]"
+                      : "text-[var(--text-muted)] hover:text-[var(--text)]",
                   ].join(" ")}
                 >
                   <input
@@ -179,13 +186,13 @@ export function AddMetricsModal({ open, onClose, challengeId }: AddMetricsModalP
         <button
           type="button"
           onClick={addRow}
-          className="text-xs text-zinc-500 hover:text-zinc-900 font-medium self-start transition-colors"
+          className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] font-medium self-start transition-colors"
         >
           + Add another metric
         </button>
 
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3.5 py-2.5">
+          <p className="text-sm text-[var(--danger)] bg-[var(--danger-dim)] border border-[var(--danger)]/20 rounded-xl px-3.5 py-2.5">
             {error}
           </p>
         )}

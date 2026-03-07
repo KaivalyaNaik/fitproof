@@ -17,7 +17,7 @@ export function NavClient({ displayName }: { displayName: string }) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-zinc-400 font-medium hidden sm:block">
+      <span className="text-xs text-[var(--text-muted)] font-medium hidden sm:block">
         {displayName}
       </span>
       <Button variant="ghost" size="sm" onClick={handleLogout} loading={loading}>

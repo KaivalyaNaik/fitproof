@@ -90,7 +90,7 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
       <div className="mb-8">
         {/* Title row */}
         <div className="flex items-start gap-2.5 mb-1.5 flex-wrap">
-          <h1 className="text-xl font-semibold text-zinc-900 break-words min-w-0">
+          <h1 className="text-xl font-semibold text-[var(--text)] break-words min-w-0">
             {challenge.name}
           </h1>
           <Badge
@@ -100,13 +100,13 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
         </div>
 
         {challenge.description && (
-          <p className="text-sm text-zinc-400 leading-relaxed mb-1">{challenge.description}</p>
+          <p className="text-sm text-[var(--text-muted)] leading-relaxed mb-1">{challenge.description}</p>
         )}
-        <p className="text-[11px] text-zinc-400 tabular-nums">
+        <p className="text-[11px] text-[var(--text-dim)] tabular-nums font-mono-nums">
           {formatDate(challenge.start_date)} – {formatDate(challenge.end_date)}
         </p>
 
-        {/* Action buttons — full width row on mobile, right-aligned on desktop */}
+        {/* Action buttons */}
         <div className="flex flex-wrap gap-2 mt-4">
           {isHost && (
             <Button
@@ -157,7 +157,7 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
             {challenge.metrics.map((m) => (
               <span
                 key={m.id}
-                className="text-[11px] bg-zinc-50 text-zinc-500 border border-zinc-100 px-2.5 py-1 rounded-full font-medium"
+                className="text-[11px] bg-[var(--surface-raised)] text-[var(--text-muted)] border border-[var(--border)] px-2.5 py-1 rounded-full font-medium"
               >
                 {m.metric_name} {m.metric_type === "min" ? "≥" : "≤"} {m.target_value} {m.metric_unit} · {m.points} pts
               </span>
@@ -167,16 +167,16 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
       </div>
 
       {/* Pill tabs */}
-      <div className="flex gap-1 p-1 bg-zinc-100 rounded-xl w-fit mb-8 overflow-x-auto max-w-full">
+      <div className="flex gap-1 p-1 bg-[var(--surface)] border border-[var(--border)] rounded-xl w-fit mb-8 overflow-x-auto max-w-full">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={[
-              "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150",
+              "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 whitespace-nowrap cursor-pointer",
               activeTab === tab.id
-                ? "bg-white text-zinc-900 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-700",
+                ? "bg-[var(--accent)] text-[var(--accent-fg)]"
+                : "text-[var(--text-muted)] hover:text-[var(--text)]",
             ].join(" ")}
           >
             {tab.label}
@@ -187,7 +187,7 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
       {/* Tab content */}
       <div>
         {activeTab === "leaderboard" && (
-          <div className="bg-white rounded-2xl ring-1 ring-zinc-100 overflow-hidden">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
             <LeaderboardTable entries={leaderboard} />
           </div>
         )}
@@ -220,11 +220,11 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
         onClose={() => setCloseModalOpen(false)}
         title="Close Challenge"
       >
-        <p className="text-sm text-zinc-500 mb-5">
+        <p className="text-sm text-[var(--text-muted)] mb-5">
           How do you want to close this challenge?
         </p>
         {actionError && (
-          <p className="text-sm text-red-500 mb-3">{actionError}</p>
+          <p className="text-sm text-[var(--danger)] mb-3">{actionError}</p>
         )}
         <div className="flex flex-col gap-2">
           <Button
@@ -258,13 +258,13 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
         onClose={() => setLeaveModalOpen(false)}
         title="Leave Challenge"
       >
-        <p className="text-sm text-zinc-500 mb-5">
+        <p className="text-sm text-[var(--text-muted)] mb-5">
           Are you sure you want to leave{" "}
-          <strong className="text-zinc-800">{challenge.name}</strong>? You
+          <strong className="text-[var(--text)]">{challenge.name}</strong>? You
           won&apos;t be able to rejoin without a new invite code.
         </p>
         {actionError && (
-          <p className="text-sm text-red-500 mb-3">{actionError}</p>
+          <p className="text-sm text-[var(--danger)] mb-3">{actionError}</p>
         )}
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={() => setLeaveModalOpen(false)}>

@@ -24,7 +24,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-8 sm:mb-12">
         <StatTile label="Challenges" value={String(stats.challenges_joined)} />
         <StatTile label="Points" value={formatPoints(stats.total_points)} />
-        <StatTile label="Fines" value={formatFines(stats.total_fines)} />
+        <StatTile label="Fines" value={formatFines(stats.total_fines)} accent="danger" />
         <StatTile
           label="Submissions"
           value={`${stats.total_submissions}/${stats.total_submissions + stats.missed_submissions}`}
@@ -33,7 +33,7 @@ export default async function DashboardPage() {
 
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h2 className="text-sm font-semibold text-zinc-900 uppercase tracking-widest">
+        <h2 className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-widest">
           Your Challenges
         </h2>
         <div className="flex gap-2">
@@ -46,9 +46,9 @@ export default async function DashboardPage() {
 
       {/* Challenge grid */}
       {challenges.length === 0 ? (
-        <div className="text-center py-24 text-zinc-400">
+        <div className="text-center py-24 text-[var(--text-muted)]">
           <p className="text-sm font-medium mb-1">No challenges yet</p>
-          <p className="text-xs">Create one or join with an invite code.</p>
+          <p className="text-xs text-[var(--text-dim)]">Create one or join with an invite code.</p>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -61,13 +61,26 @@ export default async function DashboardPage() {
   );
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatTile({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: "danger";
+}) {
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-5 ring-1 ring-zinc-100">
-      <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">
+    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 sm:p-5">
+      <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">
         {label}
       </p>
-      <p className="text-xl font-semibold text-zinc-900 tabular-nums truncate">
+      <p
+        className={[
+          "text-xl font-semibold tabular-nums truncate font-mono-nums",
+          accent === "danger" ? "text-[var(--danger)]" : "text-[var(--text)]",
+        ].join(" ")}
+      >
         {value}
       </p>
     </div>

@@ -118,13 +118,13 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
 
   if (checkingHistory) {
     return (
-      <div className="py-14 text-center text-zinc-400 text-sm">Loading…</div>
+      <div className="py-14 text-center text-[var(--text-muted)] text-sm">Loading…</div>
     );
   }
 
   if (metrics.length === 0) {
     return (
-      <div className="py-14 text-center text-zinc-400 text-sm">
+      <div className="py-14 text-center text-[var(--text-muted)] text-sm">
         No metrics configured for this challenge yet.
       </div>
     );
@@ -133,19 +133,19 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
   if (alreadySubmitted && !result) {
     return (
       <div className="py-14 text-center">
-        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+        <div className="w-10 h-10 rounded-full bg-[var(--success-dim)] flex items-center justify-center mx-auto mb-4">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
               d="M3.5 9l4 4 7-7"
-              stroke="#059669"
+              stroke="var(--success)"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </div>
-        <p className="text-sm font-semibold text-zinc-900">Already submitted today</p>
-        <p className="text-xs text-zinc-400 mt-1">Come back tomorrow!</p>
+        <p className="text-sm font-semibold text-[var(--text)]">Already submitted today</p>
+        <p className="text-xs text-[var(--text-muted)] mt-1">Come back tomorrow!</p>
       </div>
     );
   }
@@ -154,23 +154,23 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
     return (
       <div className="flex flex-col gap-4">
         <div className="text-center py-6">
-          <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 rounded-full bg-[var(--accent-dim)] flex items-center justify-center mx-auto mb-4">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
               <path
                 d="M4 11l5 5 9-9"
-                stroke="#4f46e5"
+                stroke="var(--accent)"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-zinc-900">Submission recorded</p>
-          <p className="text-2xl font-bold text-indigo-600 mt-1 tabular-nums">
+          <p className="text-sm font-semibold text-[var(--text)]">Submission recorded</p>
+          <p className="text-2xl font-bold text-[var(--accent)] mt-1 tabular-nums font-mono-nums">
             +{formatPoints(result.total_points_earned)}
           </p>
         </div>
-        <div className="bg-zinc-50 rounded-2xl overflow-hidden">
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
           {result.metrics.map((m, i) => {
             const metric = metrics.find((cm) => cm.metric_id === m.metric_id);
             return (
@@ -178,27 +178,27 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
                 key={m.metric_id}
                 className={[
                   "flex items-center justify-between px-5 py-3.5",
-                  i > 0 ? "border-t border-zinc-100" : "",
+                  i > 0 ? "border-t border-[var(--border-subtle)]" : "",
                 ].join(" ")}
               >
                 <div className="flex items-center gap-2.5">
                   <span
                     className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                      m.passed ? "bg-emerald-500" : "bg-red-400"
+                      m.passed ? "bg-[var(--success)]" : "bg-[var(--danger)]"
                     }`}
                   />
-                  <span className="text-xs text-zinc-700">
+                  <span className="text-xs text-[var(--text-muted)]">
                     {metric?.metric_name ?? m.metric_id}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-[11px] text-zinc-400 tabular-nums">
+                  <span className="font-mono-nums text-[11px] text-[var(--text-dim)] tabular-nums">
                     {m.value}
                   </span>
                   <span
                     className={[
-                      "text-xs font-semibold tabular-nums",
-                      m.passed ? "text-emerald-600" : "text-zinc-300",
+                      "text-xs font-semibold tabular-nums font-mono-nums",
+                      m.passed ? "text-[var(--success)]" : "text-[var(--text-dim)]",
                     ].join(" ")}
                   >
                     {m.passed ? `+${formatPoints(m.points_awarded)}` : "0 pts"}
@@ -210,22 +210,22 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
         </div>
 
         {/* Proof upload */}
-        <div className="bg-white rounded-2xl ring-1 ring-zinc-100 p-5">
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
           <div className="flex items-start justify-between mb-1">
-            <p className="text-xs font-semibold text-zinc-700">
+            <p className="text-xs font-semibold text-[var(--text)]">
               {mediaRequired ? "Upload proof (required)" : "Attach proof (optional)"}
             </p>
-            <span className="text-[11px] text-zinc-400 tabular-nums">{uploadedCount}/4</span>
+            <span className="text-[11px] text-[var(--text-muted)] tabular-nums font-mono-nums">{uploadedCount}/4</span>
           </div>
-          <p className="text-[11px] text-zinc-400 mb-3">
+          <p className="text-[11px] text-[var(--text-muted)] mb-3">
             Photo or video · max 50 MB · images are auto-compressed
             {mediaRequired && mediaFineAmount && parseFloat(mediaFineAmount) > 0 && (
-              <span className="ml-1 text-amber-600">· Fine: {mediaFineAmount} pts if skipped</span>
+              <span className="ml-1 text-[var(--warning)]">· Fine: {mediaFineAmount} pts if skipped</span>
             )}
           </p>
 
           {uploadedCount >= 4 ? (
-            <div className="flex items-center gap-2 text-emerald-600 text-xs font-medium">
+            <div className="flex items-center gap-2 text-[var(--success)] text-xs font-medium">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M2.5 7l3 3 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -244,14 +244,14 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-zinc-200 rounded-xl py-4 text-xs text-zinc-400 hover:border-indigo-300 hover:text-indigo-500 transition-colors"
+                className="w-full border-2 border-dashed border-[var(--border)] rounded-xl py-4 text-xs text-[var(--text-muted)] hover:border-[var(--accent)]/50 hover:text-[var(--accent)] transition-colors"
               >
                 {mediaFiles.length > 0
                   ? `${mediaFiles.length} file${mediaFiles.length > 1 ? "s" : ""} selected`
                   : `Tap to choose files (up to ${4 - uploadedCount})`}
               </button>
               {uploadedCount > 0 && uploadedCount < 4 && (
-                <p className="text-[11px] text-emerald-600">{uploadedCount} file{uploadedCount > 1 ? "s" : ""} uploaded successfully</p>
+                <p className="text-[11px] text-[var(--success)]">{uploadedCount} file{uploadedCount > 1 ? "s" : ""} uploaded successfully</p>
               )}
               {mediaFiles.length > 0 && (
                 <Button
@@ -264,7 +264,7 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
                 </Button>
               )}
               {mediaError && (
-                <p className="text-xs text-red-600">{mediaError}</p>
+                <p className="text-xs text-[var(--danger)]">{mediaError}</p>
               )}
             </div>
           )}
@@ -278,16 +278,16 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
       {metrics.map((m) => (
         <div
           key={m.metric_id}
-          className="bg-white rounded-2xl ring-1 ring-zinc-100 p-5"
+          className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5"
         >
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-sm font-semibold text-zinc-900">{m.metric_name}</p>
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <p className="text-sm font-semibold text-[var(--text)]">{m.metric_name}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">
                 {m.metric_type === "min" ? "Min" : "Max"} {m.target_value} {m.metric_unit} → {formatPoints(m.points)}
               </p>
             </div>
-            <span className="text-[11px] text-amber-700 bg-amber-50 ring-1 ring-amber-200/60 px-2 py-0.5 rounded-md font-medium">
+            <span className="text-[10px] text-[var(--warning)] bg-[var(--warning-dim)] border border-[var(--warning)]/20 px-2 py-0.5 rounded-md font-semibold">
               Fine {formatPoints(m.fine_amount)}
             </span>
           </div>
@@ -306,7 +306,7 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
       ))}
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3.5 py-2.5">
+        <p className="text-sm text-[var(--danger)] bg-[var(--danger-dim)] border border-[var(--danger)]/20 rounded-xl px-3.5 py-2.5">
           {error}
         </p>
       )}

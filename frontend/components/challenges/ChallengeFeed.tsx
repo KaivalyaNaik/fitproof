@@ -54,12 +54,12 @@ export function ChallengeFeed({ challengeId }: { challengeId: string }) {
   }, [lightbox, closeLightbox, navigate]);
 
   if (loading) {
-    return <div className="py-14 text-center text-zinc-400 text-sm">Loading…</div>;
+    return <div className="py-14 text-center text-[var(--text-muted)] text-sm">Loading…</div>;
   }
 
   if (feed.length === 0) {
     return (
-      <div className="py-14 text-center text-zinc-400 text-sm">
+      <div className="py-14 text-center text-[var(--text-muted)] text-sm">
         No proof media in the last 7 days.
       </div>
     );
@@ -71,18 +71,18 @@ export function ChallengeFeed({ challengeId }: { challengeId: string }) {
         {feed.map((item) => (
           <div
             key={item.submission_id}
-            className="bg-white rounded-2xl ring-1 ring-zinc-100 overflow-hidden"
+            className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden"
           >
             {/* Header: avatar + name + date */}
             <div className="flex items-center gap-3 px-5 py-3.5">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[11px] font-bold shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[var(--accent-dim)] text-[var(--accent)] flex items-center justify-center text-[11px] font-bold shrink-0 border border-[var(--accent)]/20">
                 {getInitials(item.display_name)}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-zinc-900 truncate">
+                <p className="text-sm font-semibold text-[var(--text)] truncate">
                   {item.display_name}
                 </p>
-                <p className="text-[11px] text-zinc-400">{formatDate(item.date)}</p>
+                <p className="text-[11px] text-[var(--text-muted)]">{formatDate(item.date)}</p>
               </div>
             </div>
 
@@ -93,7 +93,7 @@ export function ChallengeFeed({ challengeId }: { challengeId: string }) {
                   <button
                     key={url}
                     onClick={() => setLightbox({ media: item.media, index: idx })}
-                    className="w-14 h-14 rounded-lg overflow-hidden shrink-0 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    className="w-14 h-14 rounded-lg overflow-hidden shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] ring-offset-1 ring-offset-[var(--surface)]"
                   >
                     {isVideo(url) ? (
                       <video
@@ -126,7 +126,7 @@ export function ChallengeFeed({ challengeId }: { challengeId: string }) {
         >
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 z-10 text-white/70 hover:text-white text-2xl leading-none p-2"
+            className="absolute top-4 right-4 z-10 text-white/70 hover:text-white text-2xl leading-none p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
             aria-label="Close"
           >
             ✕
@@ -135,7 +135,7 @@ export function ChallengeFeed({ challengeId }: { challengeId: string }) {
           {lightbox.index > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(-1); }}
-              className="absolute left-4 z-10 text-white/70 hover:text-white text-3xl p-3"
+              className="absolute left-4 z-10 text-white/70 hover:text-white text-3xl p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
               aria-label="Previous"
             >
               ‹
@@ -152,14 +152,14 @@ export function ChallengeFeed({ challengeId }: { challengeId: string }) {
                 src={lightbox.media[lightbox.index]}
                 controls
                 autoPlay
-                className="max-h-[85vh] max-w-full rounded-lg"
+                className="max-h-[85vh] max-w-full rounded-xl"
               />
             ) : (
               <img
                 key={lightbox.media[lightbox.index]}
                 src={lightbox.media[lightbox.index]}
                 alt=""
-                className="max-h-[90vh] max-w-full object-contain rounded-lg"
+                className="max-h-[90vh] max-w-full object-contain rounded-xl"
               />
             )}
           </div>
@@ -167,7 +167,7 @@ export function ChallengeFeed({ challengeId }: { challengeId: string }) {
           {lightbox.index < lightbox.media.length - 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(1); }}
-              className="absolute right-4 z-10 text-white/70 hover:text-white text-3xl p-3"
+              className="absolute right-4 z-10 text-white/70 hover:text-white text-3xl p-3 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
               aria-label="Next"
             >
               ›
@@ -179,8 +179,8 @@ export function ChallengeFeed({ challengeId }: { challengeId: string }) {
               {lightbox.media.map((_, i) => (
                 <span
                   key={i}
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    i === lightbox.index ? "bg-white" : "bg-white/30"
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    i === lightbox.index ? "bg-white scale-125" : "bg-white/30"
                   }`}
                 />
               ))}

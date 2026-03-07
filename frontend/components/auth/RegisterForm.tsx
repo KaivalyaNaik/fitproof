@@ -45,16 +45,16 @@ export function RegisterForm() {
   return (
     <>
       <div className="mb-7">
-        <h1 className="text-xl font-semibold text-zinc-900 mb-1">Create account</h1>
-        <p className="text-sm text-zinc-400">Join FitProof today</p>
+        <h1 className="text-xl font-semibold text-[var(--text)] mb-1">Create account</h1>
+        <p className="text-sm text-[var(--text-muted)]">Join FitProof today</p>
       </div>
 
       <GoogleButton />
 
       <div className="flex items-center gap-3 my-5">
-        <div className="flex-1 h-px bg-zinc-100" />
-        <span className="text-xs text-zinc-400">or</span>
-        <div className="flex-1 h-px bg-zinc-100" />
+        <div className="flex-1 h-px bg-[var(--border)]" />
+        <span className="text-xs text-[var(--text-dim)]">or</span>
+        <div className="flex-1 h-px bg-[var(--border)]" />
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -88,7 +88,7 @@ export function RegisterForm() {
         />
 
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3.5 py-2.5">
+          <p className="text-sm text-[var(--danger)] bg-[var(--danger-dim)] border border-[var(--danger)]/20 rounded-xl px-3.5 py-2.5">
             {error}
           </p>
         )}
@@ -98,11 +98,11 @@ export function RegisterForm() {
         </Button>
       </form>
 
-      <p className="text-xs text-zinc-400 text-center mt-6">
+      <p className="text-xs text-[var(--text-dim)] text-center mt-6">
         Already have an account?{" "}
         <Link
           href="/login"
-          className="text-zinc-700 hover:text-zinc-900 font-medium underline underline-offset-2 transition-colors"
+          className="text-[var(--text-muted)] hover:text-[var(--text)] font-medium underline underline-offset-2 transition-colors"
         >
           Sign in
         </Link>
