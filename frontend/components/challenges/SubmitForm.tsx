@@ -19,6 +19,7 @@ interface SubmitFormProps {
 export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmount }: SubmitFormProps) {
   const router = useRouter();
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [todaySubmissionId, setTodaySubmissionId] = useState<string | null>(null);
   const [checkingHistory, setCheckingHistory] = useState(true);
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(metrics.map((m) => [m.metric_id, ""]))
@@ -37,10 +38,14 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
   useEffect(() => {
     clientFetch<SubmissionHistoryItem[]>(`/challenges/${challengeId}/submissions`)
       .then((history) => {
-        const submittedToday = history.some(
+        const todayEntry = history.find(
           (h) => h.date === today && h.submission_type === "submitted"
         );
-        setAlreadySubmitted(submittedToday);
+        if (todayEntry) {
+          setAlreadySubmitted(true);
+          setTodaySubmissionId(todayEntry.id);
+          setUploadedCount(todayEntry.media.length);
+        }
       })
       .finally(() => setCheckingHistory(false));
   }, [challengeId, today]);
@@ -83,7 +88,8 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
   }
 
   async function handleMediaUpload() {
-    if (!result || mediaFiles.length === 0) return;
+    const submissionId = result?.id ?? todaySubmissionId;
+    if (!submissionId || mediaFiles.length === 0) return;
     setMediaError(null);
     setMediaUploading(true);
     let uploaded = 0;
@@ -100,7 +106,7 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
         const form = new FormData();
         form.append("media", fileToUpload, file.name);
         await clientFetch(
-          `/challenges/${challengeId}/submissions/${result.id}/media`,
+          `/challenges/${challengeId}/submissions/${submissionId}/media`,
           { method: "POST", body: form }
         );
         uploaded++;
@@ -132,20 +138,67 @@ export function SubmitForm({ challengeId, metrics, mediaRequired, mediaFineAmoun
 
   if (alreadySubmitted && !result) {
     return (
-      <div className="py-14 text-center">
-        <div className="w-10 h-10 rounded-full bg-[var(--success-dim)] flex items-center justify-center mx-auto mb-4">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M3.5 9l4 4 7-7"
-              stroke="var(--success)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+      <div className="flex flex-col gap-4">
+        <div className="text-center py-6">
+          <div className="w-10 h-10 rounded-full bg-[var(--success-dim)] flex items-center justify-center mx-auto mb-3">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M3.5 9l4 4 7-7" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <p className="text-sm font-semibold text-[var(--text)]">Already submitted today</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">You can still add more proof below.</p>
         </div>
-        <p className="text-sm font-semibold text-[var(--text)]">Already submitted today</p>
-        <p className="text-xs text-[var(--text-muted)] mt-1">Come back tomorrow!</p>
+
+        {todaySubmissionId && uploadedCount < 4 && (
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+            <div className="flex items-start justify-between mb-1">
+              <p className="text-xs font-semibold text-[var(--text)]">Add proof</p>
+              <span className="text-[11px] text-[var(--text-muted)] tabular-nums font-mono-nums">{uploadedCount}/4</span>
+            </div>
+            <p className="text-[11px] text-[var(--text-muted)] mb-3">
+              Photo or video · max 50 MB · images are auto-compressed
+            </p>
+            <div className="flex flex-col gap-2.5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-[var(--border)] rounded-xl py-4 text-xs text-[var(--text-muted)] hover:border-[var(--accent)]/50 hover:text-[var(--accent)] transition-colors"
+              >
+                {mediaFiles.length > 0
+                  ? `${mediaFiles.length} file${mediaFiles.length > 1 ? "s" : ""} selected`
+                  : `Tap to add files (up to ${4 - uploadedCount})`}
+              </button>
+              {uploadedCount > 0 && (
+                <p className="text-[11px] text-[var(--success)]">{uploadedCount} file{uploadedCount > 1 ? "s" : ""} already uploaded</p>
+              )}
+              {mediaFiles.length > 0 && (
+                <Button type="button" size="sm" onClick={handleMediaUpload} loading={mediaUploading}>
+                  Upload {mediaFiles.length} file{mediaFiles.length > 1 ? "s" : ""}
+                </Button>
+              )}
+              {mediaError && (
+                <p className="text-xs text-[var(--danger)]">{mediaError}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {uploadedCount >= 4 && (
+          <div className="flex items-center gap-2 text-[var(--success)] text-xs font-medium px-1">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 7l3 3 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Maximum uploads reached (4/4)
+          </div>
+        )}
       </div>
     );
   }
