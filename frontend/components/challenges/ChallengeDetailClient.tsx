@@ -300,7 +300,7 @@ function WeeklyFinesReveal({ entries }: { entries: LeaderboardEntry[] }) {
         <div className="flex items-center gap-2.5">
           <span className="text-lg">💸</span>
           <div className="text-left">
-            <p className="text-sm font-semibold text-[var(--text)]">Weekly Fines</p>
+            <p className="text-sm font-semibold text-[var(--text)]">Fines Till Now</p>
             <p className="text-[11px] text-[var(--text-muted)]">
               {revealed ? "Tap to hide" : "Tap to reveal who got fined"}
             </p>
@@ -318,7 +318,7 @@ function WeeklyFinesReveal({ entries }: { entries: LeaderboardEntry[] }) {
         <div className="border-t border-[var(--border)]">
           {!hasFines ? (
             <p className="px-5 py-4 text-sm text-[var(--text-muted)] text-center">
-              No fines this week 🎉
+              No fines yet 🎉
             </p>
           ) : (
             entries
