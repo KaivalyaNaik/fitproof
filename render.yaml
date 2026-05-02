@@ -46,3 +46,14 @@ services:
         sync: false
       - key: EMAIL_VERIFICATION_TTL
         value: 15m
+      # Grafana Cloud Loki — set the three secrets in the Render dashboard
+      - key: GRAFANA_LOKI_URL
+        sync: false
+      - key: GRAFANA_LOKI_USER
+        sync: false
+      - key: GRAFANA_LOKI_TOKEN
+        sync: false
+      - key: GRAFANA_LOKI_BATCH_INTERVAL
+        value: 5s
+      - key: GRAFANA_LOKI_BATCH_SIZE
+        value: "100"

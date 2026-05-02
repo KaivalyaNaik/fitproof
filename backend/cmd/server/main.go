@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,12 +12,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
 	"github.com/KaivalyaNaik/fitproof/internal/config"
 	"github.com/KaivalyaNaik/fitproof/internal/db"
 	"github.com/KaivalyaNaik/fitproof/internal/handlers"
+	applogger "github.com/KaivalyaNaik/fitproof/internal/logger"
 	"github.com/KaivalyaNaik/fitproof/internal/middleware"
 	"github.com/KaivalyaNaik/fitproof/internal/repositories"
 	repodb "github.com/KaivalyaNaik/fitproof/internal/repositories/db"
@@ -26,10 +29,14 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-
 	cfg := config.Load()
-	logger.Info("config loaded", slog.String("env", cfg.AppEnv))
+
+	logger, closeLogger := applogger.New(*cfg)
+	slog.SetDefault(logger)
+	logger.Info("config loaded",
+		slog.String("env", cfg.AppEnv),
+		slog.Bool("loki_enabled", cfg.LokiURL != ""),
+	)
 
 	if err := db.RunMigrations(cfg.DatabaseURL, cfg.MigrationsPath); err != nil {
 		logger.Error("migrations failed", slog.String("error", err.Error()))
@@ -94,9 +101,10 @@ func main() {
 	subH := handlers.NewSubmissionHandler(subSvc, logger)
 
 	r := chi.NewRouter()
+	r.Use(chimiddleware.RealIP)
+	r.Use(middleware.RequestID())
 	r.Use(middleware.Recovery(logger))
 	r.Use(middleware.RequestLogger(logger))
-	r.Use(chimiddleware.RealIP)
 
 	r.Get("/health", handlers.HealthHandler(pool))
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
@@ -178,10 +186,15 @@ func main() {
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		logger.Error("graceful shutdown failed", slog.String("error", err.Error()))
-		os.Exit(1)
 	}
 
 	logger.Info("server stopped")
+
+	drainCtx, drainCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	if err := closeLogger(drainCtx); err != nil {
+		fmt.Fprintf(os.Stderr, "logger drain failed: %v\n", err)
+	}
+	drainCancel()
 }
 
 func runDailyCron(ctx context.Context, svc *services.SubmissionService, logger *slog.Logger) {
@@ -198,17 +211,20 @@ func runDailyCron(ctx context.Context, svc *services.SubmissionService, logger *
 		case <-time.After(next.Sub(now)):
 		}
 		date := time.Now().UTC().AddDate(0, 0, -1).Format("2006-01-02")
-		logger.Info("cron: processing missed submissions", slog.String("date", date))
+		runLogger := logger.With(slog.String("cron_run_id", uuid.NewString()))
+		runLogger.Info("cron: starting", slog.String("date", date))
+
+		runLogger.Info("cron: processing missed submissions", slog.String("date", date))
 		if err := svc.ProcessMissedSubmissions(ctx, date); err != nil {
-			logger.Error("cron: missed submissions failed", slog.String("error", err.Error()))
+			runLogger.Error("cron: missed submissions failed", slog.String("error", err.Error()))
 		}
-		logger.Info("cron: processing missing media fines", slog.String("date", date))
+		runLogger.Info("cron: processing missing media fines", slog.String("date", date))
 		if err := svc.ProcessMissingMedia(ctx, date); err != nil {
-			logger.Error("cron: missing media fines failed", slog.String("error", err.Error()))
+			runLogger.Error("cron: missing media fines failed", slog.String("error", err.Error()))
 		}
-		logger.Info("cron: cleaning up expired media")
+		runLogger.Info("cron: cleaning up expired media")
 		if err := svc.DeleteExpiredMedia(ctx); err != nil {
-			logger.Error("cron: expired media cleanup failed", slog.String("error", err.Error()))
+			runLogger.Error("cron: expired media cleanup failed", slog.String("error", err.Error()))
 		}
 	}
 }

@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Manrope, JetBrains_Mono } from "next/font/google";
+
+import { ErrorReporter } from "@/components/error-reporter";
+
 import "./globals.css";
 
 const bebasNeue = Bebas_Neue({
@@ -42,6 +45,7 @@ export default function RootLayout({
       <body
         className={`${bebasNeue.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
       >
+        <ErrorReporter />
         {children}
       </body>
     </html>
