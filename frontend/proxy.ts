@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/register", "/verify-email"];
+// /log is the server-side Loki relay — publicly reachable by design (Origin
+// check inside the route handler is the real gate). Must NOT be auth-gated or
+// browser logs from logged-out users (the login page itself, error reporter on
+// public pages) would 307 to /login and never reach Loki.
+const PUBLIC_PATHS = ["/login", "/register", "/verify-email", "/log"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

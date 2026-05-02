@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { log } from "./logger";
+
 export class ApiResponseError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -40,7 +42,9 @@ export async function serverFetch<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new ApiResponseError(res.status, (body as { error: string }).error ?? "Unknown error");
+    const message = (body as { error: string }).error ?? "Unknown error";
+    log.error("api error", { source: "serverFetch", status: res.status, path, message });
+    throw new ApiResponseError(res.status, message);
   }
 
   if (res.status === 204) return undefined as T;
@@ -86,17 +90,21 @@ export async function clientFetch<T>(
           },
         });
         if (retry.status === 401) {
+          log.error("api 401 after retry", { path });
           window.location.href = "/login";
           throw new ApiResponseError(401, "Session expired");
         }
         if (!retry.ok) {
           const body = await retry.json().catch(() => ({ error: "Unknown error" }));
-          throw new ApiResponseError(retry.status, (body as { error: string }).error ?? "Unknown error");
+          const message = (body as { error: string }).error ?? "Unknown error";
+          log.error("api error", { source: "clientFetch.retry", status: retry.status, path, message });
+          throw new ApiResponseError(retry.status, message);
         }
         if (retry.status === 204) return undefined as T;
         return retry.json() as Promise<T>;
       } else {
         isRefreshing = false;
+        log.error("refresh failed", { path, refreshStatus: refreshed.status });
         window.location.href = "/login";
         throw new ApiResponseError(401, "Session expired");
       }
@@ -108,7 +116,9 @@ export async function clientFetch<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new ApiResponseError(res.status, (body as { error: string }).error ?? "Unknown error");
+    const message = (body as { error: string }).error ?? "Unknown error";
+    log.error("api error", { source: "clientFetch", status: res.status, path, message });
+    throw new ApiResponseError(res.status, message);
   }
 
   if (res.status === 204) return undefined as T;

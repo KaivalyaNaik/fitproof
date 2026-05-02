@@ -46,6 +46,13 @@ type Config struct {
 	R2SecretAccessKey string
 	R2Bucket          string
 	R2PublicURL       string // e.g. https://pub-xxx.r2.dev (no trailing slash)
+
+	// Grafana Cloud Loki — empty LokiURL disables shipping
+	LokiURL           string
+	LokiUser          string
+	LokiToken         string
+	LokiBatchInterval time.Duration
+	LokiBatchSize     int
 }
 
 func Load() *Config {
@@ -84,6 +91,12 @@ func Load() *Config {
 		R2SecretAccessKey: getEnv("R2_SECRET_ACCESS_KEY", ""),
 		R2Bucket:          getEnv("R2_BUCKET", ""),
 		R2PublicURL:       getEnv("R2_PUBLIC_URL", ""),
+
+		LokiURL:           getEnv("GRAFANA_LOKI_URL", ""),
+		LokiUser:          getEnv("GRAFANA_LOKI_USER", ""),
+		LokiToken:         getEnv("GRAFANA_LOKI_TOKEN", ""),
+		LokiBatchInterval: getEnvDuration("GRAFANA_LOKI_BATCH_INTERVAL", 5*time.Second),
+		LokiBatchSize:     getEnvInt("GRAFANA_LOKI_BATCH_SIZE", 100),
 	}
 }
 

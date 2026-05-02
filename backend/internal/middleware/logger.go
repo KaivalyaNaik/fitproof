@@ -4,6 +4,8 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type responseWriter struct {
@@ -24,12 +26,17 @@ func RequestLogger(logger *slog.Logger) func(http.Handler) http.Handler {
 
 			next.ServeHTTP(rw, r)
 
-			logger.Info("request",
+			attrs := []any{
+				slog.String("request_id", RequestIDFrom(r.Context())),
 				slog.String("method", r.Method),
 				slog.String("path", r.URL.Path),
 				slog.Int("status", rw.status),
 				slog.Int64("duration_ms", time.Since(start).Milliseconds()),
-			)
+			}
+			if uid, ok := r.Context().Value(UserIDKey).(uuid.UUID); ok && uid != uuid.Nil {
+				attrs = append(attrs, slog.String("user_id", uid.String()))
+			}
+			logger.Info("request", attrs...)
 		})
 	}
 }
