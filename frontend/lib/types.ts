@@ -76,6 +76,17 @@ export interface LeaderboardEntry {
   last_submission_date?: string;
 }
 
+// Fines Summary
+export interface FinesSummaryEntry {
+  user_id: string;
+  display_name: string;
+  total_fines: string;
+  missed_day_fines: string;
+  media_fines: string;
+  missed_days: number;
+  missed_dates: string;
+}
+
 // Submissions
 export interface MetricResult {
   metric_id: string;

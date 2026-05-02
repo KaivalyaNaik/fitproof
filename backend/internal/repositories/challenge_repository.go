@@ -83,6 +83,10 @@ func (r *ChallengeRepository) GetLeaderboard(ctx context.Context, challengeID uu
 	return r.q.GetChallengeLeaderboard(ctx, challengeID)
 }
 
+func (r *ChallengeRepository) GetFinesSummary(ctx context.Context, challengeID uuid.UUID) ([]db.GetChallengeFinesSummaryRow, error) {
+	return r.q.GetChallengeFinesSummary(ctx, challengeID)
+}
+
 func (r *ChallengeRepository) UpdateChallengeStatus(ctx context.Context, id uuid.UUID, status db.ChallengeStatus) (db.Challenge, error) {
 	return r.q.UpdateChallengeStatus(ctx, db.UpdateChallengeStatusParams{
 		ID:     id,

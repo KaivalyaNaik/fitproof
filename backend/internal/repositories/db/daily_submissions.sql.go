@@ -15,7 +15,7 @@ import (
 const createDailySubmission = `-- name: CreateDailySubmission :one
 INSERT INTO daily_submissions (user_challenge_id, date, submission_type)
 VALUES ($1, $2, $3)
-RETURNING id, user_challenge_id, date, submission_type, submitted_at
+RETURNING id, user_challenge_id, date, submission_type, submitted_at, media_key, media_fine_applied_at
 `
 
 type CreateDailySubmissionParams struct {
@@ -33,6 +33,29 @@ func (q *Queries) CreateDailySubmission(ctx context.Context, arg CreateDailySubm
 		&i.Date,
 		&i.SubmissionType,
 		&i.SubmittedAt,
+		&i.MediaKey,
+		&i.MediaFineAppliedAt,
+	)
+	return i, err
+}
+
+const getSubmission = `-- name: GetSubmission :one
+SELECT id, user_challenge_id, date, submission_type, submitted_at, media_key, media_fine_applied_at
+FROM daily_submissions
+WHERE id = $1
+`
+
+func (q *Queries) GetSubmission(ctx context.Context, id uuid.UUID) (DailySubmission, error) {
+	row := q.db.QueryRow(ctx, getSubmission, id)
+	var i DailySubmission
+	err := row.Scan(
+		&i.ID,
+		&i.UserChallengeID,
+		&i.Date,
+		&i.SubmissionType,
+		&i.SubmittedAt,
+		&i.MediaKey,
+		&i.MediaFineAppliedAt,
 	)
 	return i, err
 }
@@ -80,7 +103,7 @@ func (q *Queries) ListMembersWithoutSubmission(ctx context.Context, date pgtype.
 }
 
 const listUserSubmissions = `-- name: ListUserSubmissions :many
-SELECT id, user_challenge_id, date, submission_type, submitted_at, media_key
+SELECT id, user_challenge_id, date, submission_type, submitted_at, media_key, media_fine_applied_at
 FROM daily_submissions
 WHERE user_challenge_id = $1::uuid
 ORDER BY date DESC
@@ -102,6 +125,7 @@ func (q *Queries) ListUserSubmissions(ctx context.Context, userChallengeID uuid.
 			&i.SubmissionType,
 			&i.SubmittedAt,
 			&i.MediaKey,
+			&i.MediaFineAppliedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -113,23 +137,16 @@ func (q *Queries) ListUserSubmissions(ctx context.Context, userChallengeID uuid.
 	return items, nil
 }
 
-const getSubmission = `-- name: GetSubmission :one
-SELECT id, user_challenge_id, date, submission_type, submitted_at, media_key
-FROM daily_submissions
-WHERE id = $1
+const setSubmissionMediaKey = `-- name: SetSubmissionMediaKey :exec
+UPDATE daily_submissions SET media_key = $2 WHERE id = $1
 `
 
-func (q *Queries) GetSubmission(ctx context.Context, id uuid.UUID) (DailySubmission, error) {
-	row := q.db.QueryRow(ctx, getSubmission, id)
-	var i DailySubmission
-	err := row.Scan(
-		&i.ID,
-		&i.UserChallengeID,
-		&i.Date,
-		&i.SubmissionType,
-		&i.SubmittedAt,
-		&i.MediaKey,
-	)
-	return i, err
+type SetSubmissionMediaKeyParams struct {
+	ID       uuid.UUID
+	MediaKey *string
 }
 
+func (q *Queries) SetSubmissionMediaKey(ctx context.Context, arg SetSubmissionMediaKeyParams) error {
+	_, err := q.db.Exec(ctx, setSubmissionMediaKey, arg.ID, arg.MediaKey)
+	return err
+}

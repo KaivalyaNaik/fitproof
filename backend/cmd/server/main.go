@@ -139,6 +139,7 @@ func main() {
 			r.Post("/{id}/submissions/{subID}/media", subH.UploadMedia)
 			r.Get("/{id}/feed", subH.GetChallengeFeed)
 			r.Get("/{id}/leaderboard", chalH.GetLeaderboard)
+			r.Get("/{id}/fines-summary", chalH.GetFinesSummary)
 			r.Patch("/{id}/status", chalH.UpdateStatus)
 			r.Post("/{id}/leave", chalH.Leave)
 		})

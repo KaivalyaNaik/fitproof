@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { serverFetch } from "@/lib/server-api";
-import type { ChallengeListItem, LeaderboardEntry } from "@/lib/types";
+import type { ChallengeListItem, LeaderboardEntry, FinesSummaryEntry } from "@/lib/types";
 import { ChallengeDetailClient } from "@/components/challenges/ChallengeDetailClient";
 
 interface ChallengeDetailResponse {
@@ -49,10 +49,20 @@ export default async function ChallengePage({
   const membership = allChallenges.find((c) => c.id === id)?.membership;
   if (!membership) redirect("/dashboard");
 
+  let finesSummary: FinesSummaryEntry[] | null = null;
+  if (detail.status === "completed" || detail.status === "cancelled") {
+    try {
+      finesSummary = await serverFetch<FinesSummaryEntry[]>(`/challenges/${id}/fines-summary`);
+    } catch {
+      finesSummary = null;
+    }
+  }
+
   return (
     <ChallengeDetailClient
       challenge={{ ...detail, membership, status: detail.status as import("@/lib/types").ChallengeStatus }}
       leaderboard={leaderboard}
+      finesSummary={finesSummary}
     />
   );
 }

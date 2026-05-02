@@ -158,6 +158,8 @@ func mapChallengeError(h *ChallengeHandler, w http.ResponseWriter, err error, op
 		respond.Error(w, http.StatusUnprocessableEntity, "challenge is not active")
 	case errors.Is(err, services.ErrNotAuthorized):
 		respond.Error(w, http.StatusForbidden, "not authorized")
+	case errors.Is(err, services.ErrChallengeNotMember):
+		respond.Error(w, http.StatusForbidden, "not a member of this challenge")
 	case errors.Is(err, services.ErrMetricNotFound):
 		respond.Error(w, http.StatusUnprocessableEntity, "one or more metric IDs not found")
 	case errors.Is(err, services.ErrHostCannotLeave):
@@ -239,13 +241,13 @@ func (h *ChallengeHandler) GetChallenge(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	_, ok := callerID(r)
+	userID, ok := callerID(r)
 	if !ok {
 		respond.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	challenge, metrics, err := h.svc.GetChallenge(r.Context(), challengeID)
+	challenge, metrics, err := h.svc.GetChallenge(r.Context(), userID, challengeID)
 	if err != nil {
 		mapChallengeError(h, w, err, "get challenge")
 		return
@@ -447,13 +449,13 @@ func (h *ChallengeHandler) GetLeaderboard(w http.ResponseWriter, r *http.Request
 		respond.Error(w, http.StatusBadRequest, "invalid challenge id")
 		return
 	}
-	_, ok := callerID(r)
+	userID, ok := callerID(r)
 	if !ok {
 		respond.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	rows, err := h.svc.GetLeaderboard(r.Context(), challengeID)
+	rows, err := h.svc.GetLeaderboard(r.Context(), userID, challengeID)
 	if err != nil {
 		mapChallengeError(h, w, err, "get leaderboard")
 		return
@@ -480,6 +482,48 @@ func (h *ChallengeHandler) GetLeaderboard(w http.ResponseWriter, r *http.Request
 			TotalPoints:        numericString(row.TotalPoints),
 			TotalFines:         numericString(row.TotalFines),
 			LastSubmissionDate: lastDate,
+		}
+	}
+	respond.JSON(w, http.StatusOK, out)
+}
+
+func (h *ChallengeHandler) GetFinesSummary(w http.ResponseWriter, r *http.Request) {
+	challengeID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		respond.Error(w, http.StatusBadRequest, "invalid challenge id")
+		return
+	}
+	userID, ok := callerID(r)
+	if !ok {
+		respond.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	rows, err := h.svc.GetFinesSummary(r.Context(), userID, challengeID)
+	if err != nil {
+		mapChallengeError(h, w, err, "get fines summary")
+		return
+	}
+
+	type finesSummaryEntry struct {
+		UserID         string `json:"user_id"`
+		DisplayName    string `json:"display_name"`
+		TotalFines     string `json:"total_fines"`
+		MissedDayFines string `json:"missed_day_fines"`
+		MediaFines     string `json:"media_fines"`
+		MissedDays     int64  `json:"missed_days"`
+		MissedDates    string `json:"missed_dates"`
+	}
+	out := make([]finesSummaryEntry, len(rows))
+	for i, row := range rows {
+		out[i] = finesSummaryEntry{
+			UserID:         row.UserID.String(),
+			DisplayName:    row.DisplayName,
+			TotalFines:     numericString(row.TotalFines),
+			MissedDayFines: numericString(row.MissedDayFines),
+			MediaFines:     numericString(row.MediaFines),
+			MissedDays:     row.MissedDays,
+			MissedDates:    row.MissedDates,
 		}
 	}
 	respond.JSON(w, http.StatusOK, out)

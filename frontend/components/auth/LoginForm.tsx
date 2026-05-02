@@ -19,6 +19,13 @@ export function LoginForm() {
 
   const oauthError = searchParams.get("error") === "oauth_failed";
 
+  function safeRedirect(raw: string | null): string {
+    if (!raw) return "/dashboard";
+    if (!raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
+    if (raw.includes(":") || raw.includes("\\")) return "/dashboard";
+    return raw;
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -28,7 +35,7 @@ export function LoginForm() {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      router.push(searchParams.get("from") ?? "/dashboard");
+      router.push(safeRedirect(searchParams.get("from")));
     } catch (err) {
       if (err instanceof ApiResponseError) {
         setError(

@@ -30,7 +30,18 @@ type CreateChallengeParams struct {
 	MediaFineAmount pgtype.Numeric
 }
 
-func scanChallenge(row interface{ Scan(...any) error }) (Challenge, error) {
+func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams) (Challenge, error) {
+	row := q.db.QueryRow(ctx, createChallenge,
+		arg.Name,
+		arg.Description,
+		arg.InviteCode,
+		arg.Status,
+		arg.StartDate,
+		arg.EndDate,
+		arg.CreatedBy,
+		arg.MediaRequired,
+		arg.MediaFineAmount,
+	)
 	var i Challenge
 	err := row.Scan(
 		&i.ID,
@@ -49,21 +60,6 @@ func scanChallenge(row interface{ Scan(...any) error }) (Challenge, error) {
 	return i, err
 }
 
-func (q *Queries) CreateChallenge(ctx context.Context, arg CreateChallengeParams) (Challenge, error) {
-	row := q.db.QueryRow(ctx, createChallenge,
-		arg.Name,
-		arg.Description,
-		arg.InviteCode,
-		arg.Status,
-		arg.StartDate,
-		arg.EndDate,
-		arg.CreatedBy,
-		arg.MediaRequired,
-		arg.MediaFineAmount,
-	)
-	return scanChallenge(row)
-}
-
 const getChallengeByID = `-- name: GetChallengeByID :one
 SELECT id, name, description, invite_code, status, start_date, end_date, created_by, created_at, updated_at, media_required, media_fine_amount
 FROM challenges WHERE id = $1
@@ -71,7 +67,22 @@ FROM challenges WHERE id = $1
 
 func (q *Queries) GetChallengeByID(ctx context.Context, id uuid.UUID) (Challenge, error) {
 	row := q.db.QueryRow(ctx, getChallengeByID, id)
-	return scanChallenge(row)
+	var i Challenge
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.InviteCode,
+		&i.Status,
+		&i.StartDate,
+		&i.EndDate,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.MediaRequired,
+		&i.MediaFineAmount,
+	)
+	return i, err
 }
 
 const getChallengeByInviteCode = `-- name: GetChallengeByInviteCode :one
@@ -81,7 +92,91 @@ FROM challenges WHERE invite_code = $1
 
 func (q *Queries) GetChallengeByInviteCode(ctx context.Context, inviteCode string) (Challenge, error) {
 	row := q.db.QueryRow(ctx, getChallengeByInviteCode, inviteCode)
-	return scanChallenge(row)
+	var i Challenge
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.InviteCode,
+		&i.Status,
+		&i.StartDate,
+		&i.EndDate,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.MediaRequired,
+		&i.MediaFineAmount,
+	)
+	return i, err
+}
+
+const getChallengeFinesSummary = `-- name: GetChallengeFinesSummary :many
+SELECT
+    u.id           AS user_id,
+    u.display_name,
+    cs.total_fines,
+    COUNT(ds.id) FILTER (WHERE ds.submission_type = 'missed')::bigint AS missed_days,
+    COALESCE(
+        COUNT(ds.id) FILTER (WHERE ds.media_fine_applied_at IS NOT NULL)::numeric
+            * c.media_fine_amount,
+        0
+    )::numeric(10,2) AS media_fines,
+    (cs.total_fines - COALESCE(
+        COUNT(ds.id) FILTER (WHERE ds.media_fine_applied_at IS NOT NULL)::numeric
+            * c.media_fine_amount,
+        0
+    ))::numeric(10,2) AS missed_day_fines,
+    COALESCE(
+        string_agg(to_char(ds.date, 'YYYY-MM-DD'), ',' ORDER BY ds.date) FILTER (WHERE ds.submission_type = 'missed'),
+        ''
+    )::text AS missed_dates
+FROM challenge_scores cs
+JOIN user_challenges uc ON cs.user_challenge_id = uc.id
+JOIN users u             ON uc.user_id = u.id
+JOIN challenges c        ON c.id = uc.challenge_id
+LEFT JOIN daily_submissions ds ON ds.user_challenge_id = uc.id
+WHERE uc.challenge_id = $1::uuid
+  AND uc.status = 'active'
+GROUP BY u.id, u.display_name, cs.total_fines, c.media_fine_amount
+ORDER BY cs.total_fines DESC
+`
+
+type GetChallengeFinesSummaryRow struct {
+	UserID         uuid.UUID
+	DisplayName    string
+	TotalFines     pgtype.Numeric
+	MissedDays     int64
+	MediaFines     pgtype.Numeric
+	MissedDayFines pgtype.Numeric
+	MissedDates    string
+}
+
+func (q *Queries) GetChallengeFinesSummary(ctx context.Context, challengeID uuid.UUID) ([]GetChallengeFinesSummaryRow, error) {
+	rows, err := q.db.Query(ctx, getChallengeFinesSummary, challengeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetChallengeFinesSummaryRow
+	for rows.Next() {
+		var i GetChallengeFinesSummaryRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.DisplayName,
+			&i.TotalFines,
+			&i.MissedDays,
+			&i.MediaFines,
+			&i.MissedDayFines,
+			&i.MissedDates,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getChallengeLeaderboard = `-- name: GetChallengeLeaderboard :many
@@ -222,5 +317,20 @@ type UpdateChallengeStatusParams struct {
 
 func (q *Queries) UpdateChallengeStatus(ctx context.Context, arg UpdateChallengeStatusParams) (Challenge, error) {
 	row := q.db.QueryRow(ctx, updateChallengeStatus, arg.Status, arg.ID)
-	return scanChallenge(row)
+	var i Challenge
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.InviteCode,
+		&i.Status,
+		&i.StartDate,
+		&i.EndDate,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.MediaRequired,
+		&i.MediaFineAmount,
+	)
+	return i, err
 }
