@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ChallengeDetail, LeaderboardEntry } from "@/lib/types";
+import type { ChallengeDetail, LeaderboardEntry, FinesSummaryEntry } from "@/lib/types";
 import { clientFetch, ApiResponseError } from "@/lib/client-api";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -14,16 +14,18 @@ import { SubmitForm } from "./SubmitForm";
 import { AddMetricsModal } from "./AddMetricsModal";
 import { formatDate, formatFines, statusLabel } from "@/lib/utils";
 
-type Tab = "leaderboard" | "feed" | "history" | "submit";
+type Tab = "leaderboard" | "feed" | "history" | "submit" | "fines";
 
 interface Props {
   challenge: ChallengeDetail;
   leaderboard: LeaderboardEntry[];
+  finesSummary?: FinesSummaryEntry[] | null;
 }
 
-export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
+export function ChallengeDetailClient({ challenge, leaderboard, finesSummary }: Props) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>("leaderboard");
+  const isFinished = challenge.status === "completed" || challenge.status === "cancelled";
+  const [activeTab, setActiveTab] = useState<Tab>(isFinished && finesSummary ? "fines" : "leaderboard");
   const [closeModalOpen, setCloseModalOpen] = useState(false);
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [addMetricsOpen, setAddMetricsOpen] = useState(false);
@@ -78,10 +80,11 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
   }
 
   const tabs: { id: Tab; label: string }[] = [
+    ...(isFinished && finesSummary ? [{ id: "fines" as Tab, label: "Fines" }] : []),
     { id: "leaderboard", label: "Leaderboard" },
     { id: "feed", label: "Team Feed" },
     { id: "history", label: "My History" },
-    { id: "submit", label: "Submit Today" },
+    ...(!isFinished ? [{ id: "submit" as Tab, label: "Submit Today" }] : []),
   ];
 
   return (
@@ -200,6 +203,11 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
         {activeTab === "history" && (
           <SubmissionHistory challengeId={challenge.id} />
         )}
+        {activeTab === "fines" && finesSummary && (
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+            <FinesSummaryTable entries={finesSummary} />
+          </div>
+        )}
         {activeTab === "submit" && (
           <SubmitForm
             challengeId={challenge.id}
@@ -283,6 +291,79 @@ export function ChallengeDetailClient({ challenge, leaderboard }: Props) {
         </div>
       </Modal>
     </main>
+  );
+}
+
+function FinesSummaryTable({ entries }: { entries: FinesSummaryEntry[] }) {
+  return (
+    <div>
+      <div className="px-5 py-4 border-b border-[var(--border)]">
+        <h3 className="text-sm font-semibold text-[var(--text)]">Fines Summary</h3>
+      </div>
+
+      {/* Header */}
+      <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-5 py-2.5 border-b border-[var(--border)] bg-[var(--surface-raised)]">
+        <span className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide">Name</span>
+        <span className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide text-right">Missed</span>
+        <span className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide text-right min-w-[72px]">Fines</span>
+      </div>
+
+      {/* Rows */}
+      {entries.map((entry, i) => {
+        const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const dates = entry.missed_dates
+          ? entry.missed_dates
+              .split(",")
+              .map((d) => {
+                const [, month, day] = d.trim().split("-").map(Number);
+                if (!month || !day) return null;
+                return `${monthNames[month - 1]} ${day}`;
+              })
+              .filter((s): s is string => s !== null)
+          : [];
+
+        const total = parseFloat(entry.total_fines);
+        const missedDayFines = parseFloat(entry.missed_day_fines);
+        const mediaFines = parseFloat(entry.media_fines);
+        const formatINR = (n: number) =>
+          n > 0 ? `₹${new Intl.NumberFormat("en-IN").format(n)}` : "₹0";
+        const showBreakdown = total > 0 && (missedDayFines > 0 || mediaFines > 0);
+
+        return (
+          <div
+            key={entry.user_id}
+            className={i > 0 ? "border-t border-[var(--border-subtle)]" : ""}
+          >
+            <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-5 py-3 items-center">
+              <span className="text-sm text-[var(--text)]">{entry.display_name}</span>
+              <span className="text-sm text-[var(--text-muted)] tabular-nums font-mono-nums text-right">
+                {entry.missed_days}
+              </span>
+              <span className={[
+                "text-sm font-semibold tabular-nums font-mono-nums text-right min-w-[72px]",
+                total > 0 ? "text-[var(--danger)]" : "text-[var(--text-muted)]",
+              ].join(" ")}>
+                {formatINR(total)}
+              </span>
+            </div>
+            {showBreakdown && (
+              <div className="px-5 pb-2 -mt-1">
+                <p className="text-[11px] text-[var(--text-dim)] tabular-nums font-mono-nums text-right">
+                  {formatINR(missedDayFines)} missed days · {formatINR(mediaFines)} missing media
+                </p>
+              </div>
+            )}
+            {dates.length > 0 && (
+              <div className="px-5 pb-3">
+                <p className="text-[11px] text-[var(--text-dim)] leading-relaxed">
+                  {dates.join(", ")}
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

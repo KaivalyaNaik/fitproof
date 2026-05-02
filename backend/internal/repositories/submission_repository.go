@@ -70,15 +70,18 @@ func (r *SubmissionRepository) GetSubmission(ctx context.Context, id uuid.UUID) 
 	return r.q.GetSubmission(ctx, id)
 }
 
-func (r *SubmissionRepository) CreateSubmissionMedia(ctx context.Context, submissionID uuid.UUID, mediaKey string) (db.SubmissionMedia, error) {
-	return r.q.CreateSubmissionMedia(ctx, submissionID, mediaKey)
+func (r *SubmissionRepository) CreateSubmissionMedia(ctx context.Context, submissionID uuid.UUID, mediaKey string) (db.SubmissionMedium, error) {
+	return r.q.CreateSubmissionMedia(ctx, db.CreateSubmissionMediaParams{
+		SubmissionID: submissionID,
+		MediaKey:     mediaKey,
+	})
 }
 
 func (r *SubmissionRepository) CountSubmissionMedia(ctx context.Context, submissionID uuid.UUID) (int64, error) {
 	return r.q.CountSubmissionMedia(ctx, submissionID)
 }
 
-func (r *SubmissionRepository) ListSubmissionMediaBySubmissions(ctx context.Context, ids []uuid.UUID) ([]db.SubmissionMedia, error) {
+func (r *SubmissionRepository) ListSubmissionMediaBySubmissions(ctx context.Context, ids []uuid.UUID) ([]db.SubmissionMedium, error) {
 	return r.q.ListSubmissionMediaBySubmissions(ctx, ids)
 }
 
@@ -90,14 +93,20 @@ func (r *SubmissionRepository) ListSubmittedWithoutMedia(ctx context.Context, da
 	return r.q.ListSubmittedWithoutMedia(ctx, date)
 }
 
-func (r *SubmissionRepository) ListExpiredSubmissionMedia(ctx context.Context, cutoff time.Time) ([]db.ExpiredSubmissionMediaRow, error) {
-	return r.q.ListExpiredSubmissionMedia(ctx, cutoff)
+func (r *SubmissionRepository) MarkMediaFineApplied(ctx context.Context, submissionID uuid.UUID) error {
+	return r.q.MarkMediaFineApplied(ctx, submissionID)
+}
+
+func (r *SubmissionRepository) ListExpiredSubmissionMedia(ctx context.Context, cutoff time.Time) ([]db.ListExpiredSubmissionMediaRow, error) {
+	ts := pgtype.Timestamptz{Time: cutoff, Valid: true}
+	return r.q.ListExpiredSubmissionMedia(ctx, ts)
 }
 
 func (r *SubmissionRepository) DeleteExpiredSubmissionMedia(ctx context.Context, cutoff time.Time) error {
-	return r.q.DeleteExpiredSubmissionMedia(ctx, cutoff)
+	ts := pgtype.Timestamptz{Time: cutoff, Valid: true}
+	return r.q.DeleteExpiredSubmissionMedia(ctx, ts)
 }
 
-func (r *SubmissionRepository) ListChallengeFeed(ctx context.Context, challengeID uuid.UUID) ([]db.ChallengeFeedRow, error) {
+func (r *SubmissionRepository) ListChallengeFeed(ctx context.Context, challengeID uuid.UUID) ([]db.ListChallengeFeedRow, error) {
 	return r.q.ListChallengeFeed(ctx, challengeID)
 }

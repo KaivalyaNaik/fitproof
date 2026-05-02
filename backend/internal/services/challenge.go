@@ -21,6 +21,7 @@ var (
 	ErrAlreadyMember      = errors.New("already a member of this challenge")
 	ErrChallengeNotActive = errors.New("challenge is not active")
 	ErrNotAuthorized      = errors.New("not authorized")
+	ErrChallengeNotMember = errors.New("user is not a member of this challenge")
 	ErrMetricNotFound     = errors.New("metric not found")
 	ErrHostCannotLeave    = errors.New("host cannot leave — close the challenge instead")
 )
@@ -173,7 +174,14 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, userID uuid.UUID
 	return ChallengeResult{}, errors.New("failed to generate unique invite code")
 }
 
-func (s *ChallengeService) GetChallenge(ctx context.Context, challengeID uuid.UUID) (db.Challenge, []db.ListChallengeMetricsRow, error) {
+func (s *ChallengeService) GetChallenge(ctx context.Context, userID, challengeID uuid.UUID) (db.Challenge, []db.ListChallengeMetricsRow, error) {
+	if _, err := s.chalRepo.GetUserChallenge(ctx, userID, challengeID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.Challenge{}, nil, ErrChallengeNotMember
+		}
+		return db.Challenge{}, nil, err
+	}
+
 	challenge, err := s.chalRepo.GetChallengeByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -321,10 +329,20 @@ func (s *ChallengeService) LeaveChallenge(ctx context.Context, challengeID, user
 	return err
 }
 
-func (s *ChallengeService) GetLeaderboard(ctx context.Context, challengeID uuid.UUID) ([]db.GetChallengeLeaderboardRow, error) {
-	if _, err := s.chalRepo.GetChallengeByID(ctx, challengeID); err != nil {
+func (s *ChallengeService) GetFinesSummary(ctx context.Context, userID, challengeID uuid.UUID) ([]db.GetChallengeFinesSummaryRow, error) {
+	if _, err := s.chalRepo.GetUserChallenge(ctx, userID, challengeID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrChallengeNotFound
+			return nil, ErrChallengeNotMember
+		}
+		return nil, err
+	}
+	return s.chalRepo.GetFinesSummary(ctx, challengeID)
+}
+
+func (s *ChallengeService) GetLeaderboard(ctx context.Context, userID, challengeID uuid.UUID) ([]db.GetChallengeLeaderboardRow, error) {
+	if _, err := s.chalRepo.GetUserChallenge(ctx, userID, challengeID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrChallengeNotMember
 		}
 		return nil, err
 	}

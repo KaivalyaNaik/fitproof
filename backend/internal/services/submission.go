@@ -361,6 +361,10 @@ func (s *SubmissionService) ProcessMissingMedia(ctx context.Context, dateStr str
 			tx.Rollback(ctx)
 			return err
 		}
+		if err = txSubRepo.MarkMediaFineApplied(ctx, row.ID); err != nil {
+			tx.Rollback(ctx)
+			return err
+		}
 		if err = tx.Commit(ctx); err != nil {
 			return err
 		}

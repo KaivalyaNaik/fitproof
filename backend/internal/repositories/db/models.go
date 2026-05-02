@@ -240,13 +240,6 @@ type Challenge struct {
 	MediaFineAmount pgtype.Numeric
 }
 
-type SubmissionMedia struct {
-	ID           uuid.UUID
-	SubmissionID uuid.UUID
-	MediaKey     string
-	CreatedAt    pgtype.Timestamptz
-}
-
 type ChallengeMetric struct {
 	ID          uuid.UUID
 	ChallengeID uuid.UUID
@@ -268,12 +261,13 @@ type ChallengeScore struct {
 }
 
 type DailySubmission struct {
-	ID              uuid.UUID
-	UserChallengeID uuid.UUID
-	Date            pgtype.Date
-	SubmissionType  SubmissionType
-	SubmittedAt     pgtype.Timestamptz
-	MediaKey        *string
+	ID                 uuid.UUID
+	UserChallengeID    uuid.UUID
+	Date               pgtype.Date
+	SubmissionType     SubmissionType
+	SubmittedAt        pgtype.Timestamptz
+	MediaKey           *string
+	MediaFineAppliedAt pgtype.Timestamptz
 }
 
 type EmailVerificationToken struct {
@@ -303,6 +297,13 @@ type RefreshToken struct {
 	ExpiresAt pgtype.Timestamptz
 	RevokedAt pgtype.Timestamptz
 	CreatedAt pgtype.Timestamptz
+}
+
+type SubmissionMedium struct {
+	ID           uuid.UUID
+	SubmissionID uuid.UUID
+	MediaKey     string
+	CreatedAt    pgtype.Timestamptz
 }
 
 type SubmissionMetricValue struct {

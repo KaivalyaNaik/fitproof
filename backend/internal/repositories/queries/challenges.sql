@@ -40,6 +40,36 @@ WHERE uc.challenge_id = sqlc.arg(challenge_id)::uuid
   AND uc.status = 'active'
 ORDER BY rank;
 
+-- name: GetChallengeFinesSummary :many
+SELECT
+    u.id           AS user_id,
+    u.display_name,
+    cs.total_fines,
+    COUNT(ds.id) FILTER (WHERE ds.submission_type = 'missed')::bigint AS missed_days,
+    COALESCE(
+        COUNT(ds.id) FILTER (WHERE ds.media_fine_applied_at IS NOT NULL)::numeric
+            * c.media_fine_amount,
+        0
+    )::numeric(10,2) AS media_fines,
+    (cs.total_fines - COALESCE(
+        COUNT(ds.id) FILTER (WHERE ds.media_fine_applied_at IS NOT NULL)::numeric
+            * c.media_fine_amount,
+        0
+    ))::numeric(10,2) AS missed_day_fines,
+    COALESCE(
+        string_agg(to_char(ds.date, 'YYYY-MM-DD'), ',' ORDER BY ds.date) FILTER (WHERE ds.submission_type = 'missed'),
+        ''
+    )::text AS missed_dates
+FROM challenge_scores cs
+JOIN user_challenges uc ON cs.user_challenge_id = uc.id
+JOIN users u             ON uc.user_id = u.id
+JOIN challenges c        ON c.id = uc.challenge_id
+LEFT JOIN daily_submissions ds ON ds.user_challenge_id = uc.id
+WHERE uc.challenge_id = sqlc.arg(challenge_id)::uuid
+  AND uc.status = 'active'
+GROUP BY u.id, u.display_name, cs.total_fines, c.media_fine_amount
+ORDER BY cs.total_fines DESC;
+
 -- name: UpdateChallengeStatus :one
 UPDATE challenges
 SET status     = sqlc.arg(status)::challenge_status,
