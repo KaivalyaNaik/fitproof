@@ -12,6 +12,7 @@ node_modules/
 .next/
 frontend/.next/
 frontend/node_modules/
+frontend/.vercel/
 
 # Build output
 /server
